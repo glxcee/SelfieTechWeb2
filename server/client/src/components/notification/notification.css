@@ -1,0 +1,17 @@
+/* Personalizzazione della scrollbar solo per l'elemento con overflow */
+ul::-webkit-scrollbar {
+    width: 8px; /* Larghezza della scrollbar */
+}
+
+ul::-webkit-scrollbar-track {
+    background: #ffffff00; /* Colore di sfondo della traccia */
+}
+
+ul::-webkit-scrollbar-thumb {
+    background-color: #ffffff; /* Colore del pollice di scorrimento */
+    border-radius: 4px;    /* Arrotondamento del pollice */
+}
+
+ul::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* Colore del pollice durante hover */
+}
