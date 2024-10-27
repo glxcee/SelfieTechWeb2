@@ -1,9 +1,54 @@
+import { useEffect, useRef, useState } from "react"
 import {Link} from "react-router-dom"
 
 export default function ProfilePage(props) {
-    function formatCurrent() {
-        const today = (new Date()).toISOString().split('T')[0]
-        return today
+
+    function formatBirth(date) {
+        const day = date.toISOString().split('T')[0]
+        return day
+    }
+
+    const [name, setName] = useState('')
+    const [surname, setSurname] = useState('')
+    const [birth, setBirth] = useState(formatBirth(new Date()))
+
+    const fileInputRef = useRef(null)
+    const [selectedFile, setSelectedFile] = useState(null);
+
+    
+    useEffect(() => {
+      fetch("http://localhost:3001/api/profile")
+      .then(res => res.json())
+      .then(data => {
+        setName(data.name)
+        setSurname(data.surname)
+        setBirth(data.birth)
+        //console.log(data.birth, birth)
+      })
+    },[])
+
+    function handleSave() {
+      //console.log("test")
+      fetch("http://localhost:3001/api/profile",{
+        method:'POST',
+        headers: {
+           'Content-Type': 'application/json',
+         },
+        body: JSON.stringify({ name, surname, birth})
+      }).then(res => {
+        console.log(res)
+      })
+
+      const formData = new FormData();
+      formData.append('image', selectedFile);
+      fetch('http://localhost:3001/api/profile/pic', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(res => {
+        console.log(res)
+        if(res.ok) window.location.reload(false);
+      })
     }
 
     return (
@@ -15,13 +60,15 @@ export default function ProfilePage(props) {
           <div  className="relative block">
             <img
               alt="profil"
-              src="/propic.png"
+              src={"http://localhost:3001/cdn/"+props.user+".jpg"}
               className="mx-auto object-cover rounded-full h-48 w-48"
             />
           </div>
+          <input type="file" onChange={e=>setSelectedFile(e.target.files[0])} ref={fileInputRef} style={{display:"none"}} />
           <div className="text-center md:w-3/12">
           <button
             type="button"
+            onClick={()=>fileInputRef.current.click()}
             className="py-2 px-4 text-indigo-700 bg-white border border-indigo-700 hover:bg-indigo-700 hover:text-white focus:ring-indigo-500 focus:ring-offset-indigo-200 w-full transition ease-in duration-200 text-center text-base font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2  rounded-lg "
           >
             Change Selfie
@@ -47,6 +94,8 @@ export default function ProfilePage(props) {
             <div className=" relative ">
               <input
                 type="text"
+                onChange={e => setName(e.target.value)}
+                value={name}
                 id="user-info-name"
                 className=" rounded-lg border-transparent flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                 placeholder="Name"
@@ -57,6 +106,8 @@ export default function ProfilePage(props) {
             <div className=" relative ">
               <input
                 type="text"
+                onChange={e => setSurname(e.target.value)}
+                value={surname}
                 id="user-info-surname"
                 className=" rounded-lg border-transparent flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
                 placeholder="Surname"
@@ -72,7 +123,9 @@ export default function ProfilePage(props) {
           <div className=" relative ">
             <input
               type="date"
-              max={formatCurrent()}
+              onChange={e => {setBirth(e.target.value)}}
+              value={birth}
+              max={formatBirth(new Date())}
               id="user-info-birth"
               className=" rounded-lg border-transparent flex-1 appearance-none border border-gray-300 w-full py-2 px-4 bg-white text-gray-700 placeholder-gray-400 shadow-sm text-base focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
             />
@@ -91,6 +144,7 @@ export default function ProfilePage(props) {
         </Link>
         <button
           type="button"
+          onClick={handleSave}
           className="py-2 px-10 bg-blue-600 hover:bg-blue-700 focus:ring-blue-500 focus:ring-offset-blue-200 text-white transition ease-in duration-200 text-center text-base font-semibold shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-lg"
         >
           Save
