@@ -1,5 +1,4 @@
 const express = require('express')
-const db = require("./api/mongo")
 const passport = require('passport')
 const LocalStrategy = require("passport-local").Strategy;
 const flash = require('connect-flash')
@@ -7,13 +6,14 @@ const expressSession = require("express-session");
 const cors = require('cors')
 const bcrypt = require("bcrypt");
 
+const db = require("./api/mongo")
 const User = db.User
 
 const app = express()
 app.use(cors({
   origin: 'http://localhost:3000', // Consenti richieste solo da questo dominio
-  methods: ['GET', 'POST'] // Metodi consentiti
-  //credentials: true // Se stai usando cookie o autenticazione con credenziali
+  methods: ['GET', 'POST'], // Metodi consentiti
+  credentials: true // Se stai usando cookie o autenticazione con credenziali
 }));
 
 app.use(express.json());
@@ -37,9 +37,6 @@ app.use((req, res, next) => {
   res.locals.username = req.isAuthenticated() ? req.user.username : null;
   next();
 });
-
-
-
 
 
 passport.use(new LocalStrategy(
@@ -76,12 +73,14 @@ passport.use(new LocalStrategy(
 ));
 
 passport.serializeUser(function(user, done) {
+  console.log("Serializing user:", user);
   done(null, user.id);
 });
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await User.findById(id);  // Usa async/await invece del callback
+    console.log("Deserializing user with ID:", id);
+    const user = await User.findById(id);
     done(null, user);
   } catch (err) {
     done(err);
@@ -89,10 +88,14 @@ passport.deserializeUser(async (id, done) => {
 });
 
 const ensureAuthenticated = (req, res, next) => {
-  if (req.isAuthenticated()) {
-    return next();
+  if(db.env === "DEV") return next()
+  else {
+    console.log("Is user authenticated?", req.isAuthenticated());
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    return res.status(401).json({ message: "Not authenticated" });
   }
-  //res.redirect("/");
 };
 
 app.post("/api/login", (req, res, next) => {
@@ -103,7 +106,7 @@ app.post("/api/login", (req, res, next) => {
       if (!user) {
         return res.status(401).json({ message: 'Authentication failed' }); // Restituisce un errore se l'autenticazione fallisce
       }
-      req.logIn(user, (err) => {
+      req.login(user, (err) => {
         if (err) {
           return next(err); // Gestisce eventuali errori durante l'accesso
         }
@@ -112,7 +115,7 @@ app.post("/api/login", (req, res, next) => {
     })(req, res, next);
   });
   
-  app.post("/api/register", async (req, res, next) => {
+app.post("/api/register", async (req, res, next) => {
     try {
       const { username, password } = req.body;
       const existingUser = await User.findOne({ username });
@@ -128,17 +131,47 @@ app.post("/api/login", (req, res, next) => {
       });
   
       await newUser.save(); // Salva il nuovo utente nel database
+
+      await (new db.Profile({username})).save()
   
       res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
       console.error("Error during registration:", err);
       res.status(500).json({ message: 'Server error' }); // Gestisce eventuali errori del server
     }
-  });
+});
+
+
+
+
+const profile = require("./api/profile")
+
+app.get('/api/profile',ensureAuthenticated, profile.get)
+app.post('/api/profile', ensureAuthenticated, profile.post)
+
+app.post('/api/profile/pic', ensureAuthenticated, profile.upload.single('image'),  profile.postPic)
+
+
+
+
+
+app.get('/api/test', function (req,res) {
+  res.send({some: 'json', john: 'Doe'})
+})
+
 
 const build = __dirname + "/client/build/"
 app.use(express.static(build))
 
+app.get('*',ensureAuthenticated, function (req, res) {
+    res.sendFile(build+"index.html")
+})
+
+app.listen(3001, () => {
+    console.log("Server online http://localhost:3001")
+})
+
+/*
 app.get("/api/test1", async (req, res) => {
   try {
     const user = await User.findOne({ username: 'a' });
@@ -152,16 +185,4 @@ app.get("/api/test1", async (req, res) => {
     console.error("Database query error:", error);
     res.status(500).send("Database error");
   }
-});
-
-app.get('/api/test', function (req,res) {
-  res.send({some: 'json', john: 'Doe'})
-})
-
-app.get('*',ensureAuthenticated, function (req, res) {
-    res.sendFile(build+"index.html")
-})
-
-app.listen(3001, () => {
-    console.log("Server online http://localhost:3001 MARAMEOwefwfwefwefwe")
-})
+});*/

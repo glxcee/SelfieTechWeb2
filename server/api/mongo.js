@@ -18,7 +18,7 @@ const profileSchema = new mongoose.Schema({
   username: { type: String, unique: true, required: true },
   name: String,
   surname: String,
-  birth: Date
+  birth: String
 });
 
 const noteSchema = new mongoose.Schema({
@@ -32,6 +32,7 @@ const bookSchema = new mongoose.Schema({
 });
 
 module.exports = {
+    env: "DEV",
     User: mongoose.model("User", userSchema),
     Profile: mongoose.model("Profile", profileSchema),
     Book: mongoose.model("Book", bookSchema)
