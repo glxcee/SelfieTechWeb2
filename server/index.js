@@ -150,6 +150,7 @@ app.get('/api/profile',ensureAuthenticated, profile.get)
 app.post('/api/profile', ensureAuthenticated, profile.post)
 
 app.post('/api/profile/pic', ensureAuthenticated, profile.upload.single('image'),  profile.postPic)
+app.use('/cdn', express.static(__dirname + "/pics"));
 
 
 

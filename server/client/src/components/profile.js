@@ -45,7 +45,10 @@ export default function ProfilePage(props) {
         method: 'POST',
         body: formData,
       })
-      .then(res => console.log(res))
+      .then(res => {
+        console.log(res)
+        if(res.ok) window.location.reload(false);
+      })
     }
 
     return (
@@ -57,7 +60,7 @@ export default function ProfilePage(props) {
           <div  className="relative block">
             <img
               alt="profil"
-              src="/propic.png"
+              src={"http://localhost:3001/cdn/"+props.user+".jpg"}
               className="mx-auto object-cover rounded-full h-48 w-48"
             />
           </div>
