@@ -31,8 +31,9 @@ const bookSchema = new mongoose.Schema({
     notes: [noteSchema]
 });
 
+dev1 = 0
 module.exports = {
-    env: "DEV",
+    env: dev1 ? "DEV" : ".",
     User: mongoose.model("User", userSchema),
     Profile: mongoose.model("Profile", profileSchema),
     Book: mongoose.model("Book", bookSchema)

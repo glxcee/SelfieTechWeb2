@@ -47,7 +47,8 @@ export default function ProfilePage(props) {
       })
       .then(res => {
         console.log(res)
-        if(res.ok) window.location.reload(false);
+        if(res.ok) 
+          window.location.reload(false);
       })
     }
 
@@ -60,11 +61,11 @@ export default function ProfilePage(props) {
           <div  className="relative block">
             <img
               alt="profil"
-              src={"http://localhost:3001/cdn/"+props.user+".jpg"}
+              src={selectedFile == null ? ("http://localhost:3001/cdn/"+props.user+".jpg") : URL.createObjectURL(selectedFile)}
               className="mx-auto object-cover rounded-full h-48 w-48"
             />
           </div>
-          <input type="file" onChange={e=>setSelectedFile(e.target.files[0])} ref={fileInputRef} style={{display:"none"}} />
+          <input type="file" accept="image/*" onChange={e=>setSelectedFile(e.target.files[0])} ref={fileInputRef} style={{display:"none"}} />
           <div className="text-center md:w-3/12">
           <button
             type="button"

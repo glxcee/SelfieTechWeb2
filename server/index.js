@@ -41,8 +41,7 @@ app.use((req, res, next) => {
 
 passport.use(new LocalStrategy(
   async function(username, password, done) {
-    try {
-      console.log("Checking username:", username);
+    try {     console.log("Checking username:", username);
       
       // Usa async/await invece del callback
       const user = await User.findOne({ username });
@@ -88,6 +87,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 const ensureAuthenticated = (req, res, next) => {
+  console.log(db.env)
   if(db.env === "DEV") return next()
   else {
     console.log("Is user authenticated?", req.isAuthenticated());
@@ -98,22 +98,24 @@ const ensureAuthenticated = (req, res, next) => {
   }
 };
 
-app.post("/api/login", (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
+function auth(req, res, next) {
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      return next(err); // Gestisce eventuali errori
+    }
+    if (!user) {
+      return res.status(401).json({ message: 'Authentication failed' }); // Restituisce un errore se l'autenticazione fallisce
+    }
+    req.login(user, (err) => {
       if (err) {
-        return next(err); // Gestisce eventuali errori
+        return next(err); // Gestisce eventuali errori durante l'accesso
       }
-      if (!user) {
-        return res.status(401).json({ message: 'Authentication failed' }); // Restituisce un errore se l'autenticazione fallisce
-      }
-      req.login(user, (err) => {
-        if (err) {
-          return next(err); // Gestisce eventuali errori durante l'accesso
-        }
-        return res.status(200).json({ message: 'Authentication successful', user: { username: user.username } });
-      });
-    })(req, res, next);
-  });
+      return res.status(200).json({ message: 'Authentication successful', user: { username: user.username } });
+    });
+  })(req, res, next);
+}
+
+app.post("/api/login", (req, res, next) => { return auth(req, res, next) });
   
 app.post("/api/register", async (req, res, next) => {
     try {
@@ -134,7 +136,9 @@ app.post("/api/register", async (req, res, next) => {
 
       await (new db.Profile({username})).save()
   
-      res.status(201).json({ message: 'User registered successfully' });
+      return auth(req, res, next)
+
+      //res.status(201).json({ message: 'User registered successfully' });
     } catch (err) {
       console.error("Error during registration:", err);
       res.status(500).json({ message: 'Server error' }); // Gestisce eventuali errori del server

@@ -59,15 +59,15 @@ const storage = multer.diskStorage({
   
       const filePath = "./pics/"+username+".jpg"
       
-      if(fs.existsSync(filePath)) {
-        fs.unlink(filePath, (err) => {
+      if(fs.existsSync(filePath))
+        fs.unlinkSync(filePath, (err) => {
           if (err) {
             console.error('Errore durante l\'eliminazione del file:', err);
           } else {
             console.log('File eliminato con successo');
           }
         });
-      }
+
       cb(null, username+".jpg"); // Aggiunge un timestamp al nome del file
     }
 });
@@ -75,7 +75,8 @@ const storage = multer.diskStorage({
 function postProfilePic(req, res) {
     if (!req.file) {
         return res.status(400).json({ message: 'Errore nel caricamento dell\'immagine.' });
-      }
+    }
+
     res.json({ message: 'Immagine caricata con successo!', file: req.file });
 }
 
