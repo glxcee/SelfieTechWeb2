@@ -80,9 +80,18 @@ function postProfilePic(req, res) {
     res.json({ message: 'Immagine caricata con successo!', file: req.file });
 }
 
+function getProfilePic(req, res) {
+    let username = ""
+    if(db.env === "DEV") username = "a"
+    username = req.user.username
+
+    res.json({ pic: fs.existsSync("./pics/"+username+".jpg") });
+}
+
 module.exports = {
     get: getProfile,
     post: postProfile,
     upload: multer({ storage: storage }),
-    postPic: postProfilePic
+    postPic: postProfilePic,
+    getPic: getProfilePic
 }

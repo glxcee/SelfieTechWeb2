@@ -1,12 +1,7 @@
-import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { address } from "../utils"
 
 export default function Header(props) {
-  const navigate = useNavigate();
-
-  const handleClickHome = () => {
-    navigate('/selfie');
-  };
 
     return (
             <header>

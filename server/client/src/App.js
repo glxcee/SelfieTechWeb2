@@ -7,15 +7,12 @@ import LoginPage from './login'
 import ProfilePage from './components/profile'
 import TomatoPage from './components/tomato/tomato';
 
-function Test() {
-  return (<div><h1>RCODIO!</h1></div>)
-}
+import { address } from "./utils"
 
 function HomeContainer(props) {
   return (<div>
     <Header user={props.user}/>
     <Routes>
-      <Route path="/boh" element={<Test />} />
       <Route path="/" element={<Home />} />
       <Route path="/profile" element={<ProfilePage user={props.user} />} />
       <Route path="/tomato" element={<TomatoPage />} />
@@ -31,6 +28,10 @@ function App() {
   })
 
   useEffect(() => {
+    fetch(address+'api/test')
+      .then(res => res.json())
+      .then(testData => console.log(testData))
+
     if(user) localStorage.setItem('selfieUser', user)
   },[user])
 

@@ -4,14 +4,14 @@ const LocalStrategy = require("passport-local").Strategy;
 const flash = require('connect-flash')
 const expressSession = require("express-session");
 const cors = require('cors')
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const db = require("./api/mongo")
 const User = db.User
 
 const app = express()
 app.use(cors({
-  origin: 'http://localhost:3000', // Consenti richieste solo da questo dominio
+  origin: '*', // Consenti richieste solo da questo dominio
   methods: ['GET', 'POST'], // Metodi consentiti
   credentials: true // Se stai usando cookie o autenticazione con credenziali
 }));
@@ -154,15 +154,10 @@ app.get('/api/profile',ensureAuthenticated, profile.get)
 app.post('/api/profile', ensureAuthenticated, profile.post)
 
 app.post('/api/profile/pic', ensureAuthenticated, profile.upload.single('image'),  profile.postPic)
+app.get('/api/profile/pic', ensureAuthenticated, profile.getPic)
 app.use('/cdn', express.static(__dirname + "/pics"));
 
 
-
-
-
-app.get('/api/test', function (req,res) {
-  res.send({some: 'json', john: 'Doe'})
-})
 
 
 const build = __dirname + "/client/build/"
@@ -172,8 +167,8 @@ app.get('*',ensureAuthenticated, function (req, res) {
     res.sendFile(build+"index.html")
 })
 
-app.listen(3001, () => {
-    console.log("Server online http://localhost:3001")
+app.listen(8000, () => {
+    console.log("Server online http://localhost:8000")
 })
 
 /*
