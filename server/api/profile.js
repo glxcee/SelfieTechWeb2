@@ -81,9 +81,9 @@ function postProfilePic(req, res) {
 }
 
 function getProfilePic(req, res) {
-    let username = ""
+    let username = req.user?.username
     if(db.env === "DEV") username = "a"
-    username = req.user.username
+    
 
     res.json({ pic: fs.existsSync("./pics/"+username+".jpg") });
 }

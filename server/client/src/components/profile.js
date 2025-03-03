@@ -75,7 +75,7 @@ export default function ProfilePage(props) {
           <div  className="relative block">
             <img
               alt="profile"
-              src={pic ? (address+"cdn/"+props.user+".jpg") : (selectedFile == null ? "https://icon-library.com/images/default-user-icon/default-user-icon-8.jpg" : URL.createObjectURL(selectedFile))}
+              src={selectedFile ? URL.createObjectURL(selectedFile) : (pic ? (address+"cdn/"+props.user+".jpg") : "https://icon-library.com/images/default-user-icon/default-user-icon-8.jpg"   )}
               className="mx-auto object-cover rounded-full h-48 w-48"
             />
           </div>
