@@ -1,315 +1,270 @@
-import React, { useState, useEffect, useRef } from 'react';
 
-const TomatoPage = () => {
-  const [isRunning, setIsRunning] = useState(false);
-  const [firstTime, setFirstTime] = useState(true);
-  const [studying, setStudying] = useState(true);
-  const [live, setLive] = useState(false);
+import React, { useState, useEffect, useRef } from 'react';
+import './tomato.css';
+
+export default function PomodoroPage() {
+  const [totalMinutes, setTotalMinutes] = useState(175); 
+  const [studyDuration, setStudyDuration] = useState(30); 
+  const [pauseDuration, setPauseDuration] = useState(5); 
+  const [cycles, setCycles] = useState(5); 
+  const [overDuration, setOverDuration] = useState(0); // tempo in eccesso da aggiungere/togliere nell'ultimo ciclo
 
   const [timeLeft, setTimeLeft] = useState(0);
-  const [sTimeLeft, setSTimeLeft] = useState(0);
+  const [currentCycle, setCurrentCycle] = useState(1);
+  const [currentPhase, setCurrentPhase] = useState(''); // 'study' or 'pause'
 
-  const [studyInput, setStudyInput] = useState(0);
-  const [pauseInput, setPauseInput] = useState(0);
-  const [repetitionInput, setRepetitionInput] = useState(0);
-  const [ogRepInput, setOgRepInput] = useState(0);
-  const [cicli, setCicli] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
 
-  const [currentText, setCurrentText] = useState('');
-  const [timerId, setTimerId] = useState(null);
+  const [tomatoId, setTomatoId] = useState(null);
 
-  const [countdown, setCountdown] = useState(null);
-  const pauseTimer = useRef(null);
+  // passaggio secondi => minuti e viceversa
+  function secToMin(seconds) {
+    return seconds /* * 60 */;
+  }
 
-  const serverUrl = 'http://localhost:3000'; // Backend URL
+  function minToSec(minutes) {
+    return minutes / 60;
+  }
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  function notifyUser(message) {
+    alert(message);
+  }
 
-    if (!live) {
-      const studyTimeValue = Number(studyInput);
-      const pauseTimeValue = Number(pauseInput);
-      const repTimeValue = Number(repetitionInput) - cicli;
-
-      if (isNaN(studyTimeValue) || isNaN(pauseTimeValue) || isNaN(repTimeValue)) return;
-      if (studyTimeValue === 0 || pauseTimeValue === 0 || repTimeValue === 0) return;
-
-      setStudyInput(studyTimeValue);
-      setPauseInput(pauseTimeValue);
-      setRepetitionInput(repTimeValue);
-      setOgRepInput(repTimeValue);
-    }
-
-    setIsRunning(!isRunning);
-    setLive(true);
-
-    if (!isRunning) {
-      startTomatoTimer();
-    } else {
-      pauseTomato();
-    }
-  };
-
-  const startTomatoTimer = () => {
-    if (studying) {
-      if (firstTime) {
-        fetch(`${serverUrl}/saveTomato`, {
-          method: 'POST',
-          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            studyTime: studyInput,
-            pauseTime: pauseInput,
-            repeat: repetitionInput,
-          }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            setTimerId(data.timerId);
-          })
-          .catch((error) => console.error('Error saving timer:', error));
-
-        setFirstTime(false);
-        startStudy(studyInput, pauseInput);
+  // richieste salvataggio/ update del tomato su database
+  async function saveTomatoSession() {
+    try {
+      const response = await fetch('http://localhost:3001/api/tomato', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          totalTime: totalMinutes,
+          studyTime: studyDuration,
+          pauseTime: pauseDuration,
+          overTime: overDuration,
+          repetition: cycles,
+          author: 'User123', // Da sostituire
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setTomatoId(data.tomato._id);
       } else {
-        startStudy(timeLeft, pauseInput);
+        console.error('Errore nel salvataggio:', data.message);
       }
-    } else {
-      if (firstTime) {
-        setFirstTime(false);
-        startPause(pauseInput, studyInput);
-      } else {
-        startPause(timeLeft, studyInput);
-      }
+    } catch (error) {
+      console.error('Errore nella richiesta:', error);
     }
-  };
+  }
 
-  const startStudy = (time, pauseTime) => {
-    if (repetitionInput <= 0) {
-      // Reset state if repetitions are done
-      resetTomato();
+  async function updateTomatoSession(tomatoId) {
+    let over = 0;
+    let cycles = currentCycle;
+    if (currentPhase === 'study') {     // se interrompo durante lo studio 
+      over = secToMin(studyDuration) - timeLeft;  // aggiungo il tempo a cui sono arrivato
+      cycles -= 1;                      // rimuovo un ciclo (non l'ho completato)
+    }
+
+    const studied = (secToMin(studyDuration) * (cycles)) + (over);
+
+    try {
+        const response = await fetch('http://localhost:3001/api/tomato', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                id: tomatoId, 
+                timeStudied: studied,
+            }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+            console.log('Tomato aggiornato:', data);
+        } else {
+            console.error('Errore nell\'aggiornamento:', data.message);
+        }
+    } catch (error) {
+        console.error('Errore nella richiesta:', error);
+    }
+  }
+
+  // calcolo cicli ottimali 
+  function calculateCustomCycles(totalMinutes) { 
+    if (totalMinutes < 70) {
+      setTotalMinutes(70);
+      setStudyDuration(30);
+      setPauseDuration(5);
+      setOverDuration(0);
+      setCycles(2);
       return;
     }
-
-    setStudying(true);
-    setCurrentText('STUDYING...');
-    let timer = time * 60;
-
-    setCountdown(
-      setInterval(() => {
-        const minutes = Math.floor(timer / 60);
-        const seconds = timer % 60;
-        const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-        const formattedSeconds = seconds < 10 ? '0' + seconds : seconds;
-        document.getElementById('timerDisplay').textContent = `${formattedMinutes}:${formattedSeconds}`;
-
-        const timerPercentage = ((studyInput * 60 - timer) / (studyInput * 60)) * 100;
-        document.getElementById('circle2').style.height = `${timerPercentage}%`;
-
-        timer--;
-        if (timer < 0) {
-          clearInterval(countdown);
-          setTimeout(() => {
-            setRepetitionInput((prev) => prev - 1);
-            setCicli((prev) => prev + 1);
-            setSTimeLeft(0);
-            startPause(pauseTime, studyInput);
-          }, 1000);
-        }
-        setTimeLeft(timer / 60);
-      }, 1000)
-    );
-  };
-
-  const startPause = (time, studyTime) => {
-    setStudying(false);
-    setCurrentText('BREAK!');
-    let timer = time * 60;
-
-    setCountdown(
-      setInterval(() => {
-        const minutes = Math.floor(timer / 60);
-        const seconds = timer % 60;
-        const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
-        const formattedSeconds = seconds < 10 ? '0' + seconds : seconds;
-        document.getElementById('timerDisplay').textContent = `${formattedMinutes}:${formattedSeconds}`;
-
-        const timerPercentage = ((pauseInput * 60 - timer) / (pauseInput * 60)) * 100;
-        document.getElementById('circle2').style.height = `${timerPercentage}%`;
-
-        timer--;
-        if (timer < 0) {
-          clearInterval(countdown);
-          setTimeout(() => {
-            startStudy(studyTime, pauseInput);
-          }, 1000);
-        }
-        setTimeLeft(timer / 60);
-      }, 1000)
-    );
-  };
-
-  const pauseTomato = () => {
-    clearInterval(countdown);
-    pauseTimer.current = setTimeout(clearTomato, 30 * 60 * 1000); // Clears after 30 min if not resumed
-  };
-
-  const clearTomato = () => {
-    if (!live) return;
-    setTimeLeft(0);
-    setRepetitionInput(0);
-    clearInterval(countdown);
-    clearTimeout(pauseTimer.current);
-    document.getElementById('timerDisplay').textContent = '00:00';
-    document.getElementById('circle2').style.height = '0%';
-    setCurrentText('');
-  };
-
-  const resetTomato = () => {
-    // Reset all states and display after completion
-    clearInterval(countdown);
-    setFirstTime(true);
-    setIsRunning(false);
-    setLive(false);
-    setCurrentText(`Completed: ${timePercent()}%`);
-  };
-
-  const timePercent = () => {
-    const totalStudyTime = studyInput * 60 * ogRepInput;
-    const totalStudied = cicli * studyInput * 60 + (studyInput * 60 - sTimeLeft * 60);
-    return ((totalStudied / totalStudyTime) * 100).toFixed(2);
-  };
-
-  // Handle window unload to save state in localStorage
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      localStorage.setItem('timerState', JSON.stringify({
-        isRunning, studying, timeLeft, sTimeLeft, studyInput, pauseInput, repetitionInput, ogRepInput, cicli,
-        firstTime, currentText, timerId, countdown, live
-      }));
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    const savedState = JSON.parse(localStorage.getItem('timerState'));
-    if (savedState) {
-      setIsRunning(savedState.isRunning);
-      setStudying(savedState.studying);
-      setTimeLeft(savedState.timeLeft);
-      setSTimeLeft(savedState.sTimeLeft);
-      setStudyInput(savedState.studyInput);
-      setPauseInput(savedState.pauseInput);
-      setRepetitionInput(savedState.repetitionInput);
-      setOgRepInput(savedState.ogRepInput);
-      setCicli(savedState.cicli);
-      setFirstTime(savedState.firstTime);
-      setCurrentText(savedState.currentText);
-      setTimerId(savedState.timerId);
-      setLive(savedState.live);
-
-      if (savedState.isRunning) {
-        if (savedState.studying) {
-          startStudy(savedState.timeLeft, savedState.pauseInput);
-        } else {
-          startPause(savedState.timeLeft, savedState.studyInput);
+  
+    let bestCycles = 0;
+    let bestStudyTime = 0;
+    let bestPauseTime = 0;
+    let difference = 0;
+    let minDifference = Infinity;
+  
+    for (let cycles = Math.floor(totalMinutes / 35); cycles <= Math.floor(totalMinutes / 30); cycles++) {
+      for (let studyTime = 35; studyTime >= 25; studyTime--) { // studio tra 25 e 35 minuti
+        let pauseTime = Math.floor((totalMinutes - (studyTime * cycles)) / cycles);
+  
+        if (pauseTime >= 5 && pauseTime <= 10) { // Pause tra 5 e 10 minuti
+          let totalUsed = (studyTime + pauseTime) * cycles;
+          difference = totalMinutes - totalUsed;
+  
+          if (Math.abs(difference) < minDifference) { // mi salvo il match migliore possibile (con differenza minima)
+            minDifference = Math.abs(difference);
+            bestCycles = cycles;
+            bestStudyTime = studyTime;
+            bestPauseTime = pauseTime;
+          } else if (difference === 0) {  // Se troviamo un match perfetto, interrompiamo il ciclo
+            setStudyDuration(bestStudyTime);
+            setPauseDuration(bestPauseTime);
+            setCycles(bestCycles);
+            return;
+          }
         }
       }
     }
+  
+    // Impostiamo i valori migliori trovati
+    setStudyDuration(bestStudyTime);
+    setPauseDuration(bestPauseTime);
+    setCycles(bestCycles);
+    setOverDuration(difference);
+  }
 
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
+  // funzione per far partire o mettere in pausa
+  function handleStartStop() {
+    if (!isRunning) {
+      if (currentPhase === '') {
+        setCurrentPhase('study');
+        setTimeLeft(secToMin(studyDuration));
+        saveTomatoSession();
+        notifyUser('New Tomato Started!');
+      } else if (timeLeft <= 0){
+        next();
+      }
+      setIsRunning(true);
+    } else {
+      setIsRunning(false);
+    }
+  }
+
+  // Reset del tomato
+  function handleRestart() {
+    setIsRunning(false);
+    setCurrentPhase('');
+    setCurrentCycle(1);
+    setTimeLeft(0);
+  }
+
+  // fine di un ciclo (studio + pausa)
+  async function handleEndCycle() {
+    if (tomatoId) {  // Controlla che il tomatoId sia stato settato
+      console.log('updating tomato!');
+      await updateTomatoSession(tomatoId);
+    }
+    setIsRunning(false);
+    handleRestart();
+  }
+
+  // aggiungo all'ultimo ciclo di studio il tempo avanzato nella ricerca dei valori ottimi 
+  function addOvertimeLastCycle(){
+    setStudyDuration((prevStudyDuration) => prevStudyDuration + overDuration);
+  }
+
+  // passaggio da study a pause
+  function next() {  
+    if (!isRunning && timeLeft <= 0) {
+      if (currentPhase === 'study') {
+        setCurrentPhase('pause');
+        setTimeLeft(secToMin(pauseDuration));
+        notifyUser('Pause Time');
+      } else if (currentPhase === 'pause' && currentCycle < cycles) {
+        if (currentCycle === (cycles - 1)) {
+          addOvertimeLastCycle();
+        }
+        setCurrentPhase('study');
+        setTimeLeft(secToMin(studyDuration));
+        setCurrentCycle((prevCycle) => prevCycle + 1);
+        notifyUser('Study Time');
+      } else {
+        handleEndCycle();
+      }
+    } else {
+      return;
+    }
+  }
+
+  useEffect(() => {
+    if (isRunning && timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft((prevTimeLeft) => prevTimeLeft - 1);
+      }, 1000);
+  
+      return () => clearInterval(timer); // Pulizia dell'intervallo quando il componente si smonta o `isRunning` cambia
+    } else if (isRunning && timeLeft <= 0) {
+      setIsRunning(false);
+    }
+  }, [isRunning, timeLeft]);
 
   return (
-    <div>
-      <div className="flex justify-center items-center h-screen">
-        <div className="flex flex-col items-center justify-center gap-5 bg-red-500 shadow-md rounded-xl p-5">
-          <div id="interface" className="flex flex-col items-center gap-5">
-            <label id="topText" htmlFor="timerInput" className="text-xl font-bold bg-white rounded-lg px-4 py-2">
-              Entry study time in minute:
-            </label>
-            <form onSubmit={handleSubmit}>
-              <div className="flex items-center gap-5 font-medium">
-                <div className="flex flex-col items-center">
-                  <div className="mb-1" id="sT">STUDY TIME</div>
-                  <input
-                    type="number"
-                    id="studyTime"
-                    name="studyTime"
-                    min="1"
-                    value={studyInput}
-                    onChange={(e) => setStudyInput(e.target.value)}
-                    className="bg-white text-center text-lg font-semibold rounded-lg w-full h-12"
-                  />
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="mb-1" id="pT">PAUSE TIME</div>
-                  <input
-                    type="number"
-                    id="pauseTime"
-                    name="pauseTime"
-                    min="1"
-                    value={pauseInput}
-                    onChange={(e) => setPauseInput(e.target.value)}
-                    className="bg-white text-center text-lg font-semibold rounded-lg w-full h-12"
-                  />
-                </div>
-                <div className="flex flex-col items-center">
-                  <div className="mb-1" id="rep">REPETITION</div>
-                  <input
-                    type="number"
-                    id="repTime"
-                    name="repeat"
-                    min="1"
-                    value={repetitionInput}
-                    onChange={(e) => setRepetitionInput(e.target.value)}
-                    className="bg-white text-center text-2xl font-semibold rounded-lg w-28 h-28"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 justify-center items-center mt-2">
-                <button
-                  id="startButton"
-                  type="submit"
-                  className="rounded-lg w-24 h-10 bg-white font-semibold text-lg shadow-md hover:bg-gray-400 hover:text-white active:bg-red-300"
-                >
-                  START
-                </button>
-                <button
-                  id="pauseButton"
-                  type="button"
-                  onClick={clearTomato}
-                  className="rounded-lg w-24 h-10 bg-white font-semibold text-lg shadow-md hover:bg-gray-400 hover:text-white active:bg-red-300"
-                >
-                  STOP
-                </button>
-              </div>
-            </form>
-          </div>
+    <div className="container">
+      <div className="timer-box">
+        <div className="controls">
+          <button 
+            className='button-up'
+            onClick={() => { setTotalMinutes((prev) => Number(prev) - 15); 
+            calculateCustomCycles(Number(totalMinutes) - 15); }}> -
+          </button>
+          <span className="time-display">{totalMinutes} min</span>
+          <button 
+            className='button-up'
+            onClick={() => { setTotalMinutes((prev) => Number(prev) + 15); 
+            calculateCustomCycles(Number(totalMinutes) + 15); }}> +
+          </button>
+        </div>
 
-          <div id="circleWrap" className="relative">
-            <div id="circle" className="relative w-48 h-48 rounded-full border-4 border-red-300 overflow-hidden">
-              <div
-                className="timer absolute text-center w-full h-full top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl"
-                id="timerDisplay"
-              >
-                00:00
-              </div>
-              <div id="circle2" className="absolute bottom-0 w-full bg-red-300 transition-all duration-1000 ease-in-out"></div>
+        <form className="time-info">
+          <div className="time-grid">
+            <div className="info-box">
+              <label> Study </label>
+              <span> {studyDuration} min </span>
+            </div>
+            <div className="info-box">
+              <label> Pause </label>
+              <span> {pauseDuration} min </span>
+            </div>
+            <div className="info-box">
+              <label> Cycles </label>
+              <span> {cycles} </span>
             </div>
           </div>
+        </form>
 
-          <div
-            id="current"
-            className="text-white text-center flex items-center justify-center w-full h-10 text-xl bg-red-300 rounded-lg font-bold"
-          >
-            {currentText}
+        <div className="buttons bottom">
+          <button 
+            className='start'          
+            onClick={handleStartStop}> {isRunning ? 'Stop' : 'Start'} 
+          </button>
+          <div className='hidden-buttons'>
+            <button 
+              className='cycle-button'
+              onClick={handleRestart}> Restart
+            </button>
+            <button 
+              className='cycle-button'
+              onClick={handleEndCycle}> End Tomato
+            </button>
           </div>
         </div>
-      </div>
 
-      <div id="timerId" data-timerid={timerId}></div>
+        <div className="cycle-info"> Cycle {currentCycle}/{cycles} </div>
+        <div className="timer-display">
+          {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:
+          {(timeLeft % 60).toString().padStart(2, '0')}
+        </div>
+      </div>
     </div>
   );
-};
-
-export default TomatoPage;
+}

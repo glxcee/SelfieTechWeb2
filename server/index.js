@@ -12,7 +12,7 @@ const User = db.User
 const app = express()
 app.use(cors({
   origin: 'http://localhost:3000', // Consenti richieste solo da questo dominio
-  methods: ['GET', 'POST'], // Metodi consentiti
+  methods: ['GET', 'POST', 'PUT'], // Metodi consentiti
   credentials: true // Se stai usando cookie o autenticazione con credenziali
 }));
 
@@ -187,3 +187,12 @@ app.get("/api/test1", async (req, res) => {
     res.status(500).send("Database error");
   }
 });*/
+
+
+
+// Tomato
+
+const tomato = require('./api/tomato');
+
+app.post('/api/tomato', ensureAuthenticated, tomato.saveTomato);
+app.put('/api/tomato', ensureAuthenticated, tomato.updateTomato);
