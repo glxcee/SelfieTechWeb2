@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import {Link} from "react-router-dom"
+import { address } from "../utils"
 
 export default function ProfilePage(props) {
 
@@ -8,16 +9,26 @@ export default function ProfilePage(props) {
         return day
     }
 
+    
+
     const [name, setName] = useState('')
     const [surname, setSurname] = useState('')
     const [birth, setBirth] = useState(formatBirth(new Date()))
+    const [pic, setPic] = useState(false)
 
     const fileInputRef = useRef(null)
     const [selectedFile, setSelectedFile] = useState(null);
 
-    
+    function isPicPresent() {
+      fetch(address+"api/profile/pic")
+      .then(res => res.json())
+      .then(data => {
+        setPic(data.pic)
+      })
+    }
+
     useEffect(() => {
-      fetch("http://localhost:3001/api/profile")
+      fetch(address+"api/profile")
       .then(res => res.json())
       .then(data => {
         setName(data.name)
@@ -25,11 +36,14 @@ export default function ProfilePage(props) {
         setBirth(data.birth)
         //console.log(data.birth, birth)
       })
+
+      isPicPresent()
+
     },[])
 
     function handleSave() {
       //console.log("test")
-      fetch("http://localhost:3001/api/profile",{
+      fetch(address+"api/profile",{
         method:'POST',
         headers: {
            'Content-Type': 'application/json',
@@ -41,13 +55,14 @@ export default function ProfilePage(props) {
 
       const formData = new FormData();
       formData.append('image', selectedFile);
-      fetch('http://localhost:3001/api/profile/pic', {
+      fetch(address+'api/profile/pic', {
         method: 'POST',
         body: formData,
       })
       .then(res => {
         console.log(res)
-        if(res.ok) window.location.reload(false);
+        if(res.ok) 
+          window.location.reload(false);
       })
     }
 
@@ -59,12 +74,12 @@ export default function ProfilePage(props) {
         <div className="flex items-center space-x-4 justify-center">
           <div  className="relative block">
             <img
-              alt="profil"
-              src={"http://localhost:3001/cdn/"+props.user+".jpg"}
+              alt="profile"
+              src={selectedFile ? URL.createObjectURL(selectedFile) : (pic ? (address+"cdn/"+props.user+".jpg") : "https://icon-library.com/images/default-user-icon/default-user-icon-8.jpg"   )}
               className="mx-auto object-cover rounded-full h-48 w-48"
             />
           </div>
-          <input type="file" onChange={e=>setSelectedFile(e.target.files[0])} ref={fileInputRef} style={{display:"none"}} />
+          <input type="file" accept="image/*" onChange={e=>setSelectedFile(e.target.files[0])} ref={fileInputRef} style={{display:"none"}} />
           <div className="text-center md:w-3/12">
           <button
             type="button"

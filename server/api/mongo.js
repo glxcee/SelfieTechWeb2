@@ -43,8 +43,9 @@ const tomatoSchema = new mongoose.Schema({
     live: { type: Boolean, default: true }
 })
 
+dev1 = 1 // 1: dev, 0: prod
 module.exports = {
-    env: "DEV",
+    env: dev1 ? "DEV" : "PROD",
     User: mongoose.model("User", userSchema),
     Profile: mongoose.model("Profile", profileSchema),
     Book: mongoose.model("Book", bookSchema),

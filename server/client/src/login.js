@@ -1,6 +1,8 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 
+import { address } from "./utils"
+
 function LoginPage(props) {
     const [sign, setSign] = useState(false)
     const [obscured, setObs] = useState(true)
@@ -14,12 +16,12 @@ function LoginPage(props) {
 
       console.log(username, password)
 
-      fetch("http://localhost:3001/api/"+(sign ? "register" : "login"),{
+      fetch(address+"api/"+(sign ? "register" : "login"),{
         method:'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include',
+        //credentials: 'include',
         body: JSON.stringify({ username, password})
       }).then(res => {
         console.log(res)
