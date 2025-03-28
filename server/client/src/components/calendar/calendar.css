@@ -1,0 +1,10 @@
+.outBox {
+    border: 3px solid rgb(177, 175, 175);
+    padding: 20px;
+    border-radius: 20px;
+    width: 100%;
+}
+
+.body {
+    background-color: gray;
+}
