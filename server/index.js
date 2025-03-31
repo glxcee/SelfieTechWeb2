@@ -12,7 +12,7 @@ const User = db.User
 const app = express()
 app.use(cors({
   origin: 'http://localhost:3000', // Consenti richieste solo da questo dominio
-  methods: ['GET', 'POST', 'PUT'], // Metodi consentiti
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Metodi consentiti
   credentials: true // Se stai usando cookie o autenticazione con credenziali
 }));
 
@@ -158,6 +158,21 @@ app.get('/api/profile/pic', ensureAuthenticated, profile.getPic)
 app.use('/cdn', express.static(__dirname + "/pics"));
 
 
+// Tomato
+
+const tomato = require('./api/tomato');
+
+app.post('/api/tomato', ensureAuthenticated, tomato.saveTomato);
+app.put('/api/tomato', ensureAuthenticated, tomato.updateTomato);
+
+// Eventi
+
+const eventController = require("./api/event");
+
+app.post('/api/event', ensureAuthenticated, eventController.saveEvent);
+app.get('/api/event', ensureAuthenticated, eventController.getEvents);
+app.delete('/api/event/:id', ensureAuthenticated, eventController.deleteEvent);
+
 
 
 const build = __dirname + "/client/build/"
@@ -186,12 +201,3 @@ app.get("/api/test1", async (req, res) => {
     res.status(500).send("Database error");
   }
 });*/
-
-
-
-// Tomato
-
-const tomato = require('./api/tomato');
-
-app.post('/api/tomato', ensureAuthenticated, tomato.saveTomato);
-app.put('/api/tomato', ensureAuthenticated, tomato.updateTomato);

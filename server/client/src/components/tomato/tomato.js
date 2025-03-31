@@ -32,7 +32,7 @@ export default function PomodoroPage() {
   // richieste salvataggio/ update del tomato su database
   async function saveTomatoSession() {
     try {
-      const response = await fetch('http://localhost:3001/api/tomato', {
+      const response = await fetch('http://localhost:8000/api/tomato', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -66,7 +66,7 @@ export default function PomodoroPage() {
     const studied = (secToMin(studyDuration) * (cycles)) + (over);
 
     try {
-        const response = await fetch('http://localhost:3001/api/tomato', {
+        const response = await fetch('http://localhost:8000/api/tomato', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 

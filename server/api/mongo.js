@@ -43,11 +43,20 @@ const tomatoSchema = new mongoose.Schema({
     live: { type: Boolean, default: true }
 })
 
+const eventSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    description: String,
+    start: { type: String, required: true },
+    end: { type: String, required: true },
+    userId: { type: String, required: true } // { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Associazione con l'utente
+});
+
 dev1 = 1 // 1: dev, 0: prod
 module.exports = {
     env: dev1 ? "DEV" : "PROD",
     User: mongoose.model("User", userSchema),
     Profile: mongoose.model("Profile", profileSchema),
     Book: mongoose.model("Book", bookSchema),
-    Tomato: mongoose.model("Tomato", tomatoSchema)
+    Tomato: mongoose.model("Tomato", tomatoSchema),
+    Event: mongoose.model("Event", eventSchema)
 }
