@@ -1,0 +1,220 @@
+  .all {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 80vh;
+  }
+  
+  .timer-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f25f5f;
+    box-shadow: 0 8px 10px rgba(0, 0, 0, 0.4);
+    border-radius: 15px;
+    width: 70%;
+    padding: 20px;
+    margin-top: 20px;
+  }
+
+  @media (max-width: 770px) {
+    .timer-box {
+        width: 96%;
+        margin-left: 3%;
+        margin-right: 3%;
+        margin-top: 10%;
+    }
+  }
+
+  @media (max-height: 450px) {
+    .timer-box {
+        flex-direction: row;
+    }
+  }
+
+  .up {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .upper-up {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+
+  .bot {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 70%;
+    min-width: 40%;
+  }
+  
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  button {
+    background-color: white;
+    border-radius: 10px;
+    padding: 10px;
+    font-weight: bold;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  
+  button:hover {
+    background-color: rgb(215, 215, 215);
+  }
+
+  .button-up {
+    width: 35%;
+    font-size: xx-large;
+    font-weight: 500;
+    margin: 20px;
+    overflow: hidden;
+  }
+
+  .button-up:hover {
+    transform: scale(1.05); /* Aumenta leggermente la dimensione */
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .button-up:active {
+    transform: scale(1); 
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .time-display {
+    color: white;
+    font-size: 1.7rem;
+    font-weight: bold;
+    width: 220px;
+    text-align: center;
+  }
+
+  @media (max-width: 770px) {
+    .time-display {
+        width: 150px;
+    }
+  }
+  
+  .time-info {
+    margin-bottom: 10px;
+    width: 80%;
+  }
+  
+  .time-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3%;
+  }
+  
+  .info-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .info-box label {
+    color: white;
+    font-weight: bold;
+  }
+  
+  .info-box span {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    width: 80px;
+    text-align: center;
+  }
+  
+  .buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    width: 80%;
+  }
+
+  .bottom {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .start {
+    width: 85%;
+    align-self: center;
+
+    padding: 17px 40px;
+    border-radius: 10px;
+    background-color: rgb(255, 255, 255);
+    border: 0;
+    letter-spacing: 1.5px;
+    transition: all 0.3s ease;
+    box-shadow: rgb(110, 110, 110) 0px 10px 0px 0px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    font-size: x-large;
+  }
+
+  .start:hover {
+    box-shadow: rgb(110, 110, 110) 0px 7px 0px 0px;
+  }
+
+  .start:active {
+    background-color: white;
+    box-shadow: rgb(110, 110, 110) 0px 0px 0px 0px;
+    transform: translateY(7px);
+    transition: 200ms;
+  }
+
+  .hidden-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+  }
+
+  .cycle-button {
+    width: 40%;
+  }
+
+  .cycle-button:hover {
+    transform: scale(1.05); /* Aumenta leggermente la dimensione */
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .cycle-button:active {
+    transform: scale(1); 
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .cycle-info {
+    margin-top: 20px;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+  
+  .timer-display {
+    margin-top: 5px;
+    color: white;
+    font-size: 2.5rem;
+    font-weight: bold;
+  }
+
+  label {
+    font-size: x-large;
+  }
+  
