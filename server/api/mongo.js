@@ -22,16 +22,18 @@ const profileSchema = new mongoose.Schema({
 });
 
 const noteSchema = new mongoose.Schema({
-    title: String,
+    title: {type: String, required: true},
+    categories: [String],
     content: String,
-    created: Date
+    created: {type: Date, required: true},
+    modified: Date
 });
 const bookSchema = new mongoose.Schema({
     username: { type: String, unique: true, required: true },
     notes: [noteSchema]
 });
 
-dev1 = 1 // 1: dev, 0: prod
+dev1 = 0 // 1: dev, 0: prod
 module.exports = {
     env: dev1 ? "DEV" : "PROD",
     User: mongoose.model("User", userSchema),

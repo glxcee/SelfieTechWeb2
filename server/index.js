@@ -135,6 +135,7 @@ app.post("/api/register", async (req, res, next) => {
       await newUser.save(); // Salva il nuovo utente nel database
 
       await (new db.Profile({username})).save()
+      await (new db.Book({username})).save()
   
       return auth(req, res, next)
 
@@ -149,6 +150,7 @@ app.post("/api/register", async (req, res, next) => {
 
 
 const profile = require("./api/profile")
+const notes = require("./api/book")
 
 app.get('/api/profile',ensureAuthenticated, profile.get)
 app.post('/api/profile', ensureAuthenticated, profile.post)
@@ -156,6 +158,9 @@ app.post('/api/profile', ensureAuthenticated, profile.post)
 app.post('/api/profile/pic', ensureAuthenticated, profile.upload.single('image'),  profile.postPic)
 app.get('/api/profile/pic', ensureAuthenticated, profile.getPic)
 app.use('/cdn', express.static(__dirname + "/pics"));
+
+app.get('/api/notes',ensureAuthenticated, notes.get)
+app.post('/api/notes', ensureAuthenticated, notes.post)
 
 
 
