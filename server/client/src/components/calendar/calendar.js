@@ -4,11 +4,14 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import './calendar.css';
+import EventModal from './eventModal.js';
 
 export default function Calendar() {
   const calendarRef = useRef(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
   const [events, setEvents] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedInfo, setSelectedInfo] = useState(null);
 
   useEffect(() => {
     fetchEventsFromDB();
@@ -40,23 +43,26 @@ export default function Calendar() {
     }
   }
 
-  async function handleDateSelect(selectInfo) {
-    const title = prompt("Inserisci il titolo dell'evento:");
-    if (!title) return;
+  function handleDateSelect(selectInfo) {
+    setSelectedInfo(selectInfo);
+    setIsModalOpen(true);
+  }
 
-    const description = prompt('Inserisci una breve descrizione dell\'evento:') || '';
-
+  async function handleSaveEvent(eventData) {
+    if (!selectedInfo) return;
     const event = {
-      title,
-      description,
-      start: selectInfo.startStr,
-      end: selectInfo.endStr,
+      title: eventData.title,
+      description: eventData.description,
+      start: selectedInfo.startStr,
+      end: selectedInfo.endStr,
     };
 
-    let calendarApi = selectInfo.view.calendar;
+    let calendarApi = selectedInfo.view.calendar;
     calendarApi.addEvent(event);
 
     await saveEventToDB(event);
+    setIsModalOpen(false);
+    setSelectedInfo(null);
   }
 
   async function handleDelete(clickInfo) {
@@ -112,6 +118,12 @@ export default function Calendar() {
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay',
           }}
+        />
+        <EventModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)} 
+          onSave={handleSaveEvent} 
+          selectedInfo={selectedInfo}  // Passa selectedInfo qui
         />
         <style>
           {`
