@@ -148,7 +148,7 @@ app.post("/api/register", async (req, res, next) => {
 
 
 
-
+// Profile
 const profile = require("./api/profile")
 const notes = require("./api/book")
 
@@ -158,6 +158,8 @@ app.post('/api/profile', ensureAuthenticated, profile.post)
 app.post('/api/profile/pic', ensureAuthenticated, profile.upload.single('image'),  profile.postPic)
 app.get('/api/profile/pic', ensureAuthenticated, profile.getPic)
 app.use('/cdn', express.static(__dirname + "/pics"));
+
+// Notes
 
 app.get('/api/notes',ensureAuthenticated, notes.get)
 app.post('/api/notes', ensureAuthenticated, notes.post)

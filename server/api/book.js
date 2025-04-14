@@ -31,7 +31,7 @@ async function updateBook(req, res) {
 
             const book = await Book.findOneAndUpdate({username: user.username}, newBook)
             console.log(book)
-            return res.status(200).send("Profile updated")
+            return res.status(200).send("Book updated")
         }
         catch(err) {
             return res.status(500).send("Couldn't update")

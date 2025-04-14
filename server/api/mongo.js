@@ -53,7 +53,7 @@ const eventSchema = new mongoose.Schema({
     userId: { type: String, required: true } // { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Associazione con l'utente
 });
 
-dev1 = 0 // 1: dev, 0: prod
+dev1 = 1 // 1: dev, 0: prod
 module.exports = {
     env: dev1 ? "DEV" : "PROD",
     User: mongoose.model("User", userSchema),
