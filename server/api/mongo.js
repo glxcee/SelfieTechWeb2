@@ -22,6 +22,7 @@ const profileSchema = new mongoose.Schema({
 });
 
 const noteSchema = new mongoose.Schema({
+    id: {type: String, required: true},
     title: {type: String, required: true},
     categories: [String],
     content: String,

@@ -1,5 +1,5 @@
 import CalendarPage from './calendar/calendar';
-import NotesPage from './notes/notes';
+import NotesPreview from './notes/notesPreview';
 import MiniGpsPage from './gps/miniGps';
 import MiniTomatoPage from './tomato/miniTomato';
 import TimeMachinePage from './timeMachine/timeMachine';
@@ -26,7 +26,7 @@ export default function Home() {
                   </div>
               </div>
               <div className="flex justify-center items-center w-full">
-                    <NotesPage />
+                    <NotesPreview />
               </div>
           </div>
       </div>

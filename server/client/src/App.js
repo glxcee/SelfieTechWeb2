@@ -6,6 +6,7 @@ import Home from './components/home'
 import LoginPage from './login'
 import ProfilePage from './components/profile'
 import TomatoPage from './components/tomato/tomato';
+import NotesPage from './components/notes/notesPage'; 
 
 import { address } from "./utils"
 
@@ -16,6 +17,7 @@ function HomeContainer(props) {
       <Route path="/" element={<Home />} />
       <Route path="/profile" element={<ProfilePage user={props.user} />} />
       <Route path="/tomato" element={<TomatoPage />} />
+      <Route path="/notes" element={<NotesPage />} />
     </Routes>
   </div>)
 }
