@@ -1,5 +1,6 @@
 import Markdown from 'react-markdown';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { address } from '../../utils.js';
 
 
 export default function NotesPage(){
@@ -7,15 +8,38 @@ export default function NotesPage(){
     const [render, setRender] = useState(true);
     const [focus, setFocus] = useState(false);
 
+    const [mobile, setMobile] = useState(false);
+
+    const [book, setBook] = useState([]);
+    
+        useEffect(() => {
+            fetch(address+"api/notes")
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data)
+                    setBook(data.notes);
+                })
+        },[])
+
+    function handleSave() {
+        console.log(content)
+        fetch(address+'api/notes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ notes: content })
+        })
+    }
 
     return(
         <div className={"flex justify-center items-center h-screen transition-all duration-300 bg-amber-" + (focus ? "100" : "200")}>
-            <div className="w-1/3 hidden bg-yellow-700 h-full rounded-xl text-white sm:flex flex-col items-center p-3" onClick={() => setRender(true)}>
+            <div className={(mobile ? "" : "hidden") + " w-full sm:w-1/3 bg-yellow-700 h-full rounded-xl text-white sm:flex flex-col items-center p-3"} onClick={() => setRender(true)}>
                 <span className='text-xl font-bold text-center'>All Notes</span>
             </div>
-            <div className="w-full h-full flex flex-col justify-center items-center">
+            <div className={(mobile ? "hidden" : "") + " w-full h-full flex flex-col justify-center items-center"}>
                 <div className='w-full flex items-center justify-between p-3' onClick={() => setRender(true)}>
-                    <button className="sm:hidden bg-yellow-700 p-2 rounded-lg border-yellow-700 border-2 transition duration-300 hover:bg-yellow-600 hover:border-yellow-600">
+                    <button onClick={() => setMobile(true)} className="sm:hidden bg-yellow-700 p-2 rounded-lg border-yellow-700 border-2 transition duration-300 hover:bg-yellow-600 hover:border-yellow-600">
                         <svg viewBox="0 0 24 24" className='w-8 h-8 stroke-white' fill="none" xmlns="http://www.w3.org/2000/svg">
                             <g id="SVGRepo_bgCarrier" strokeWidth={0} />
                             <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round" />
@@ -53,7 +77,7 @@ export default function NotesPage(){
                         </svg>
 
                     </button>
-                    <button  className="bg-amber-100 text-yellow-700 p-2 rounded-lg border-yellow-700 border-2 transition duration-300 hover:bg-yellow-700 hover:text-white">
+                    <button onClick={() => handleSave()} className="bg-amber-100 text-yellow-700 p-2 rounded-lg border-yellow-700 border-2 transition duration-300 hover:bg-yellow-700 hover:text-white">
                         Save
                     </button>
                 </div>
