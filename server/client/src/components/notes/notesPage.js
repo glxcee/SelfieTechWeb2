@@ -14,6 +14,7 @@ export default function NotesPage(){
     const [mobile, setMobile] = useState(false);
 
     const [book, setBook] = useState([]);
+    const [sort, setSort] = useState('date');
     
     function newNote(arr) {
         arr.push({
@@ -40,22 +41,21 @@ export default function NotesPage(){
                 })
         },[])
 
-        useEffect(() => {
-            setRenderedContent(content.replace(/(?<!  )\n/g, '  \n'));
-
+        function saveContent() {
             let temp = [...book]
             temp.find((note, index) => {
                 if(note.id === noteId){
                     temp[index].content = content
                     temp[index].title = title
-                    temp[index].modified = new Date().toISOString()
                     return true
                 }
             })
-            //temp.sort()
-
             setBook(temp)
-        },[content, title])
+        }
+
+        useEffect(() => {
+            setRenderedContent(content.replace(/(?<!  )\n/g, '  \n'));
+        },[content])
 
         useEffect(() => {
             console.log(noteId)
@@ -70,30 +70,110 @@ export default function NotesPage(){
             }
         }, [noteId])
 
+        function updateModified() {
+            let temp = [...book]
+            temp.find((note, index) => {
+                if(note.id === noteId){
+                    temp[index].modified = new Date().toISOString()
+                    return true
+                }
+            })
+            sortBook(temp)
+        }
+
+        useEffect(() => {
+            if(book.length > 1) 
+                sortBook()
+        }, [sort])
+
+        function sortBook(currBook) {
+            if(currBook.length > 1) {
+                let temp = [...currBook]
+                temp.sort((a, b) => {
+                    if(sort === "date"){
+                        return new Date(b.modified) - new Date(a.modified)
+                    } else if(sort === "title"){
+                        return a.title.localeCompare(b.title)
+                    } else if(sort === "content"){
+                        return b.content.length - a.content.length
+                    }
+                })
+                setBook(temp)
+            }
+        }
+
     function handleSave() {
+        saveContent()
         console.log(book)
+
+        let finalBook = [...book]
+        finalBook.sort((a, b) => {
+                return new Date(b.modified) - new Date(a.modified)
+        })
+
         fetch(address+'api/notes', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ notes: book })
+            body: JSON.stringify({ notes: finalBook })
         }).then(res => console.log(res))
     }
 
     function handleNewNote() {
+        saveContent()
+
         let temp = [...book]
         temp = newNote(temp)
-        setBook(temp)
+        
+
+        sortBook(temp)
         setNoteId(temp[temp.length - 1].id)
     }
 
+    function handleDuplicate() {
+        saveContent()
+
+        let temp = [...book]
+        temp = newNote(temp)
+        temp[temp.length - 1].title = title + " (copy)"
+        temp[temp.length - 1].content = content
+
+        sortBook(temp)
+        setNoteId(temp[temp.length - 1].id)
+
+        //sortBook()
+    }
+
+    function handleDelete() {
+        if(book.length === 1) {
+            alert("You can't delete the last note")
+            return
+        }
+        saveContent()
+
+        let temp = [...book]
+        temp = temp.filter(note => note.id !== noteId)
+        setBook(temp)
+        setNoteId(temp[0].id)
+    }
+
     return(
-        <div className={"flex justify-center items-center h-screen transition-all duration-300 " + (focus ? "bg-amber-100" : "bg-amber-200")}>
-            <div className={(mobile ? "" : "hidden") + " w-full sm:w-1/3 bg-yellow-700 h-full rounded-xl text-white sm:flex flex-col items-center p-3"} onClick={() => setRender(true)}>
+        <div className={"flex justify-center items-start min-h-screen h-max transition-all duration-300 " + (focus ? "bg-amber-100" : "bg-amber-200")}>
+            <div className={(mobile ? "" : "hidden") + " w-full sm:w-1/3 bg-yellow-700 h-full min-h-screen rounded-none sm:rounded-r-xl text-white sm:flex flex-col items-center p-3"} onClick={() => setRender(true)}>
                 <div className='w-full flex items-center justify-between p-3'>
-                    <span className='text-2xl font-bold text-center'>All Notes</span>
-                    <svg onClick={() => handleNewNote()} className='w-16 h-16 cursor-pointer'
+                    <div>
+                        <span className='text-2xl font-bold text-center'>All Notes</span>
+                        <div>
+                            <label htmlFor='sort' className='text-sm'>Sort by</label>
+                            <select onChange={e => setSort(e.target.value)} className='bg-yellow-700 text-white outline-none rounded-lg p-1' name="sort">
+                                <option value="date">Most recent</option>
+                                <option value="title">Title</option>
+                                <option value="content">Longest</option>
+                            </select>
+                        </div>
+                    </div>
+                    <svg onClick={() => handleNewNote()} className='w-16 h-16 cursor-pointer transition-all duration-300 hover:scale-110'
                         viewBox="0 0 24 24"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
@@ -114,17 +194,20 @@ export default function NotesPage(){
                     </svg>
 
                 </div>
-                <div className='w-full h-full flex flex-col justify-start items-center p-3 gap-2 overflow-y-auto divide-white divide-y-2'>
+                <div className='w-full h-full flex flex-col justify-start items-center p-3 gap-2 overflow-y-auto divide-white divide-y-2 transition-all duration-300'>
                     {
-                    book.map((note, index) => (
-                        <div key={index} onClick={() => setNoteId(note.id)} className={'cursor-pointer '+ (noteId === note.id ? "bg-yellow-900" : "")}>
-                            <span>{note.title}</span>
+                    book.map((note, index) => {
+
+                        return (
+                        <div key={index} onClick={() => {saveContent(); setNoteId(note.id); setMobile(false); window.scrollTo({ top: 0, behavior: 'smooth' })}} className={'w-full p-3 rounded-lg cursor-pointer '+ (noteId === note.id ? "bg-yellow-900" : "")}>
+                            <span className='text-lg pl-2 font-semibold'>{note.title}</span>
+                            <p className='text-xs'>{note.content}</p>
                         </div>
-                    ))
+                    )})
                     }
                 </div>
             </div>
-            <div className={(mobile ? "hidden" : "") + " w-full h-full flex flex-col justify-center items-center p-3 gap-2"}>
+            <div className={(mobile ? "hidden" : "") + " w-full min-h-screen flex flex-col justify-start items-center p-3 gap-2"}>
                 <div className='w-full flex items-center justify-between p-3' onClick={() => setRender(true)}>
                     <button onClick={() => setMobile(true)} className="sm:hidden bg-yellow-700 p-2 rounded-lg border-yellow-700 border-2 transition duration-300 hover:bg-yellow-600 hover:border-yellow-600">
                         <svg viewBox="0 0 24 24" className='w-8 h-8 stroke-white' fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -167,24 +250,52 @@ export default function NotesPage(){
                     <button onClick={() => handleSave()} className="bg-amber-100 text-yellow-700 p-2 rounded-lg border-yellow-700 border-2 transition duration-300 hover:bg-yellow-700 hover:text-white">
                         Save
                     </button>
+                    
+                    <div className='flex items-center justify-center gap-2'>
+                    <svg onClick={() => handleDuplicate()} title="Duplicate" className='h-14 w-14 fill-yellow-700 transition-all duration-300 hover:scale-110'  viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+                                <g id="SVGRepo_bgCarrier" strokeWidth={0} />
+                                <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round" />
+                                <g id="SVGRepo_iconCarrier">
+                                    {" "}
+                                    <path
+                                    d="M47.81 91.725c0-8.328 6.539-15.315 15.568-15.33 9.03-.016 14.863.015 14.863.015s-.388-8.9-.388-15.978c0-7.08 6.227-14.165 15.262-14.165s92.802-.26 101.297.37c8.495.63 15.256 5.973 15.256 14.567 0 8.594-.054 93.807-.054 101.7 0 7.892-7.08 15.063-15.858 15.162-8.778.1-14.727-.1-14.727-.1s.323 9.97.323 16.094c0 6.123-7.12 15.016-15.474 15.016s-93.117.542-101.205.542c-8.088 0-15.552-7.116-15.207-15.987.345-8.871.345-93.58.345-101.906zm46.06-28.487l-.068 98.164c0 1.096.894 1.99 1.999 1.984l95.555-.51a2.007 2.007 0 0 0 1.998-2.01l-.064-97.283a2.01 2.01 0 0 0-2.01-2.007l-95.4-.326a1.99 1.99 0 0 0-2.01 1.988zM63.268 95.795l.916 96.246a2.007 2.007 0 0 0 2.02 1.982l94.125-.715a3.976 3.976 0 0 0 3.953-4.026l-.137-11.137s-62.877.578-71.054.578-15.438-7.74-15.438-16.45c0-8.71.588-68.7.588-68.7.01-1.1-.874-1.99-1.976-1.975l-9.027.13a4.025 4.025 0 0 0-3.97 4.067z"
+                                    fillRule="evenodd"
+                                    />{" "}
+                                </g>
+                            </svg>
+                            <svg onClick={() => handleDelete()} title="Delete" className='h-12 w-12 stroke-yellow-700 transition-all duration-300 hover:scale-110 hover:stroke-red-600' viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g id="SVGRepo_bgCarrier" strokeWidth={0} />
+                                <g id="SVGRepo_tracerCarrier" strokeLinecap="round" strokeLinejoin="round" />
+                                <g id="SVGRepo_iconCarrier">
+                                    {" "}
+                                    <path
+                                    d="M18 6L17.1991 18.0129C17.129 19.065 17.0939 19.5911 16.8667 19.99C16.6666 20.3412 16.3648 20.6235 16.0011 20.7998C15.588 21 15.0607 21 14.0062 21H9.99377C8.93927 21 8.41202 21 7.99889 20.7998C7.63517 20.6235 7.33339 20.3412 7.13332 19.99C6.90607 19.5911 6.871 19.065 6.80086 18.0129L6 6M4 6H20M16 6L15.7294 5.18807C15.4671 4.40125 15.3359 4.00784 15.0927 3.71698C14.8779 3.46013 14.6021 3.26132 14.2905 3.13878C13.9376 3 13.523 3 12.6936 3H11.3064C10.477 3 10.0624 3 9.70951 3.13878C9.39792 3.26132 9.12208 3.46013 8.90729 3.71698C8.66405 4.00784 8.53292 4.40125 8.27064 5.18807L8 6M14 10V17M10 10V17"
+                                    strokeWidth={2}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    />{" "}
+                                </g>
+                            </svg>
+
+                    </div>
                 </div>
-                <div className='w-full bg-amber-100 rounded-lg p-4'> 
-                    <input className='bg-amber-100 outline-none text-2xl' type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder='Title' />
+                <div onClick={() => setRender(true)} className='w-full bg-amber-100 rounded-lg p-4'> 
+                    <input className='bg-amber-100 outline-none text-2xl w-full' type="text" value={title} onChange={e => {updateModified(); setTitle(e.target.value)}} placeholder='Title' />
                 </div>
-                <div onMouseEnter={() => setFocus(true)} onMouseLeave={() => setFocus(false)} className='w-full h-full '>
+                <div onMouseEnter={() => setFocus(true)} onMouseLeave={() => setFocus(false)} className='w-full min-h-screen h-max '>
                 {
                     !render ?
                     <div className='w-full h-full bg-amber-100 p-4 rounded-lg'>
-                    <textarea className="w-full h-full bg-amber-100  outline-none rounded-lg"
-                        placeholder="Write your note here..."
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)} /> 
+                        <textarea className="w-full h-screen bg-amber-100 resize-none outline-none rounded-lg"
+                            placeholder="Write your note here..."
+                            value={content}
+                            onChange={(e) => {updateModified(); setContent(e.target.value)}} /> 
                     </div>
                         :
                     <div id="markdown-p" onClick={() => setRender(false)} 
-                        className={'w-full h-full bg-amber-100 p-4 hover:bg-amber-200 rounded-lg transition duration-300 ' + (content ? "" : "text-gray-500")}>
+                        className={'w-full min-h-screen h-full bg-amber-100 p-4 hover:bg-amber-200 rounded-lg transition duration-300 ' + (content ? "" : "text-gray-400")}>
                         <Markdown>
-                            {content ? renderedContent : "*Still nothing..*"}
+                            {content ? renderedContent : "*Write your note here...*"}
                         </Markdown>
                     </div>
                 }
