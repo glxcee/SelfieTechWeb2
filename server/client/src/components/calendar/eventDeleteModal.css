@@ -1,0 +1,56 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Sfondo scuro semi-trasparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000; /* Assicura che sia sopra il calendario */
+}
+
+.modal {
+    display: flex;
+    flex-direction: column;
+    width: 250px;
+    background-color: rgb(255, 255, 255);
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    width: 100%;
+    gap: 10%;
+    margin-top: 10%;
+}
+
+.event-t,
+.event-d {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    font-size: large;
+}
+
+.event-t {
+    font-size: x-large;
+    text-align: center;
+    font-weight: 500;
+}
+
+.event-dt {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: solid 3px rgb(153, 151, 151);
+    border-radius: 5px;
+    padding: 10%;
+    margin-top: 15%;
+}

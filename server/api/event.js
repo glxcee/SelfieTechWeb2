@@ -5,29 +5,16 @@ const User = db.User;
 // Salva un nuovo evento nel database
 async function saveEvent(req, res) {
     try {
-        console.log("Richiesta ricevuta:", req.body);
-        console.log("Utente autenticato?", req.isAuthenticated());
-        console.log("Dati utente:", req.user);
-        /*
-        if (!req.isAuthenticated() || !req.user) {
-            return res.status(401).json({ message: "User not authenticated" });
-        }
-        */
         console.log("Richiesta ricevuta per salvare un evento:", req.body);
         const { title, description, start, end } = req.body;
-        const userId = 'user123'; // req.user?._id; // Recupera l'ID dell'utente autenticato
-
-        if (!userId) {
-            console.error("Errore: utente non autenticato");
-            return res.status(401).json({ message: "User not authenticated" });
-        }
+        const user = db.env!=="DEV" ? req.user : await db.User.findOne({username:"a"})
 
         const newEvent = new Event({
             title,
             description,
             start,
             end,
-            userId, // Associa l'evento all'utente
+            user: user.username, // Associa l'evento all'utente
         });
 
         await newEvent.save();
@@ -43,8 +30,16 @@ async function saveEvent(req, res) {
 // Recupera tutti gli eventi di un utente
 async function getEvents(req, res) {
     try {
-        const events = await Event.find({ userId: 'user123'/*req.user._id*/ });
-        res.json(events);
+        const user = db.env!=="DEV" ? req.user : await db.User.findOne({username:"a"})
+        const events = await Event.find({ user: user.username });
+        res.json(events.map(event => ({
+            id: event._id.toString(), // Converte _id in stringa
+            title: event.title.toLowerCase() === 'pomodoro' ? '🍅' : event.title,   // visualizzazione del tomato nel calendar
+            description: event.description,
+            start: event.start,
+            end: event.end,
+            color: event.title.toLowerCase() === 'pomodoro' ? 'red' : 'light-blue' // Colore dinamico
+        })));
     } catch (err) {
         console.error("Errore nel recupero degli eventi:", err);
         res.status(500).json({ message: "Errore del server" });
@@ -53,15 +48,12 @@ async function getEvents(req, res) {
 
 // Elimina un evento specifico
 async function deleteEvent(req, res) {
+    console.log("ID ricevuto per l'eliminazione:", req.params.id);
     try {
         const event = await Event.findById(req.params.id);
 
         if (!event) {
             return res.status(404).json({ message: "Evento non trovato" });
-        }
-
-        if (event.author.toString() !== req.user._id.toString()) {
-            return res.status(403).json({ message: "Non autorizzato" });
         }
 
         await event.deleteOne();

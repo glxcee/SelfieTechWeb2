@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import './tomato.css';
+import { address } from '../../utils.js';
 
 export default function PomodoroPage() {
   const [totalMinutes, setTotalMinutes] = useState(175); 
@@ -20,11 +21,11 @@ export default function PomodoroPage() {
   function secToMin(seconds) {
     return seconds /* * 60 */;
   }
-
+  /*
   function minToSec(minutes) {
     return minutes / 60;
   }
-
+  */
   function notifyUser(message) {
     alert(message);
   }
@@ -32,7 +33,7 @@ export default function PomodoroPage() {
   // richieste salvataggio/ update del tomato su database
   async function saveTomatoSession() {
     try {
-      const response = await fetch('http://localhost:8000/api/tomato', {
+      const response = await fetch(address+'api/tomato', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -66,7 +67,7 @@ export default function PomodoroPage() {
     const studied = (secToMin(studyDuration) * (cycles)) + (over);
 
     try {
-        const response = await fetch('http://localhost:8000/api/tomato', {
+        const response = await fetch(address+'api/tomato', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -218,10 +219,6 @@ export default function PomodoroPage() {
                 onClick={() => { setTotalMinutes((prev) => Number(prev) - 15); 
                 calculateCustomCycles(Number(totalMinutes) - 15); }}> -
               </button>
-              <button
-                className='info'>
-                  i
-              </button>
             </div>
             
             <span className="time-display">{totalMinutes} min</span>
@@ -229,6 +226,10 @@ export default function PomodoroPage() {
               className='button-up'
               onClick={() => { setTotalMinutes((prev) => Number(prev) + 15); 
               calculateCustomCycles(Number(totalMinutes) + 15); }}> +
+            </button>
+            <button
+              className='info'>
+                i
             </button>
           </div>
 

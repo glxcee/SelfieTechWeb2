@@ -9,8 +9,6 @@ export default function ProfilePage(props) {
         return day
     }
 
-    
-
     const [name, setName] = useState('')
     const [surname, setSurname] = useState('')
     const [birth, setBirth] = useState(formatBirth(new Date()))

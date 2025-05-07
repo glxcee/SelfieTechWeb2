@@ -26,10 +26,27 @@
     z-index: 10001; /* Più alto dell'overlay */
 }
 
+.upper {
+    display: flex;
+    width: 100%;
+}
+
 .up-font {
+    display: flex;
     font-weight: 500;
-    font-size: x-large;
+    font-size:1.7em;
     color: rgb(76, 81, 238);
+    width: 85%;
+    justify-content: center;
+    align-items: center;
+}
+
+.tomato-event {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 15%;
+    font-size: x-large;
 }
 
 .write-info {
@@ -62,14 +79,45 @@
 
 .modal-actions {
     display: flex;
-    gap: 10%;
-    justify-content: space-between;
+    justify-content: center;
     margin-top: 5%;
 }
+
+.modal-actions button {
+    border: none;
+    width: 100px;
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+
+.time-select {
+    width: 80px;
+    height: 30px;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
 
 /*Nascondo calendario e orologio dalla selezione delle date*/
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
     display: none;
     -webkit-appearance: none;
+}
+
+/*TomatoModal*/
+.date-input {
+    text-align: center;
+}
+
+.duration-input {
+    width: 80px;
+    height: 30px;
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    text-align: center;
 }

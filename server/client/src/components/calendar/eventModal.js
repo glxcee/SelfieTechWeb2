@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import './eventModal.css';
 
-export default function EventModal({ isOpen, onClose, onSave, selectedInfo }) {
+export default function EventModal({ isOpen, onClose, onSave, selectedInfo, onTomatoClick}) {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [startDate, setStartDate] = useState('');
@@ -13,16 +13,15 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo }) {
         if (selectedInfo) {
             setTitle('');
             setDescription('');
-            const start = selectedInfo.startStr ? new Date(selectedInfo.startStr) : new Date();
-            const end = selectedInfo.endStr ? new Date(selectedInfo.endStr) : new Date(start.getTime() + 60 * 60 * 1000);
-            
-            /*
-            let endDateObj = new Date(selectedInfo.endStr);
-            endDateObj.setDate(endDateObj.getDate() - 1); // Aggiusto la data
-            selectedInfo.endStr = endDateObj.toISOString();
-            const end = selectedInfo.endStr ? new Date(selectedInfo.endStr) : new Date();
-            */
+            // Selezione inizio e fine manuali con orari specifici
+            const startDate = selectedInfo.startStr ? new Date(selectedInfo.startStr) : new Date();
+            const start = new Date(startDate);
+            start.setHours(9, 0, 0, 0); // 09:00
 
+            const endDate = selectedInfo.endStr ? new Date(selectedInfo.endStr) : new Date();
+            const end = new Date(endDate);
+            end.setHours(10, 0, 0, 0); // 10:00
+            
             setStartDate(start.toISOString().split('T')[0]);
             setStartTime(start.toTimeString().slice(0, 5));
             setEndDate(end.toISOString().split('T')[0]);
@@ -74,16 +73,37 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo }) {
         setEndTime(newEndTime);
     }
 
+    function generateTimeOptions() {
+        const times = [];
+        for (let h = 0; h < 24; h++) {
+            for (let m = 0; m < 60; m += 15) {
+                const hour = h.toString().padStart(2, '0');
+                const minute = m.toString().padStart(2, '0');
+                times.push(`${hour}:${minute}`);
+            }
+        }
+        return times;
+    }
+
+    function handleTomatoEvent() {
+        if (onTomatoClick) onTomatoClick();
+    }
+
     function handleSubmit() {
         if (!title || !startDate || !startTime || !endDate || !endTime) {
             return alert('Compila tutti i campi obbligatori');
         }
+        
+        const startDateTime = `${startDate}T${startTime}`;
+        const endDateTime = `${endDate}T${endTime}`;
+    
         onSave({
             title,
             description,
-            start: new Date(`${startDate}T${startTime}`).toISOString(),
-            end: new Date(`${endDate}T${endTime}`).toISOString()
+            start: startDateTime,
+            end: endDateTime
         });
+    
         onClose();
     }
 
@@ -92,7 +112,10 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo }) {
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h2 className="up-font">Crea un nuovo evento</h2>
+                <div className='upper'>
+                    <h2 className="up-font">Crea un nuovo evento</h2>
+                    <button onClick={handleTomatoEvent} className='tomato-event'>🍅</button>
+                </div>
                 <div className="write-info">
                     <div className="title">
                         <label>Titolo:</label>
@@ -123,13 +146,15 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo }) {
                             onKeyDown={(e) => e.preventDefault()}
                             onClick={(e) => e.target.showPicker()}
                         />
-                        <input
-                            type="time"
+                        <select
+                            className="time-select"
                             value={startTime}
                             onChange={(e) => handleDateTimeChange('startTime', e.target.value)}
-                            onKeyDown={(e) => e.preventDefault()}
-                            onClick={(e) => e.target.showPicker()}
-                        />
+                        >
+                            {generateTimeOptions().map((time) => (
+                                <option key={time} value={time}>{time}</option>
+                            ))}
+                        </select>
                     </div>
                     <label>Fine:</label>
                     <div className="date-time">
@@ -140,13 +165,15 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo }) {
                             onKeyDown={(e) => e.preventDefault()}
                             onClick={(e) => e.target.showPicker()}
                         />
-                        <input
-                            type="time"
+                        <select
+                            className="time-select"
                             value={endTime}
                             onChange={(e) => handleDateTimeChange('endTime', e.target.value)}
-                            onKeyDown={(e) => e.preventDefault()}
-                            onClick={(e) => e.target.showPicker()}
-                        />
+                        >
+                            {generateTimeOptions().map((time) => (
+                                <option key={time} value={time}>{time}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 
