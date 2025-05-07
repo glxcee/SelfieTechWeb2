@@ -5,13 +5,23 @@ import interactionPlugin from '@fullcalendar/interaction';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import './calendar.css';
 import EventModal from './eventModal.js';
+import EventDeleteModal from './eventDeleteModal.js';
+import TomatoModal from './tomatoModal';
+import { address } from '../../utils.js';
 
 export default function Calendar() {
   const calendarRef = useRef(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
   const [events, setEvents] = useState([]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInfo, setSelectedInfo] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isTomatoModalOpen, setIsTomatoModalOpen] = useState(false);
+
+  const [eventToDelete, setEventToDelete] = useState(null);
 
   useEffect(() => {
     fetchEventsFromDB();
@@ -32,7 +42,7 @@ export default function Calendar() {
 
   async function fetchEventsFromDB() {
     try {
-      const response = await fetch('http://localhost:8000/api/event');
+      const response = await fetch(address+'api/event');
       if (!response.ok) {
         throw new Error('Errore nel caricamento degli eventi');
       }
@@ -44,17 +54,21 @@ export default function Calendar() {
   }
 
   function handleDateSelect(selectInfo) {
+    let endDateObj = new Date(selectInfo.endStr);
+    endDateObj.setDate(endDateObj.getDate() - 1); // Aggiusto la data
+    selectInfo.endStr = endDateObj.toISOString();
     setSelectedInfo(selectInfo);
     setIsModalOpen(true);
   }
 
   async function handleSaveEvent(eventData) {
     if (!selectedInfo) return;
+
     const event = {
-      title: eventData.title,
-      description: eventData.description,
-      start: selectedInfo.startStr,
-      end: selectedInfo.endStr,
+        title: eventData.title,
+        description: eventData.description,
+        start: eventData.start,  // Usa il valore con l'ora corretta
+        end: eventData.end       // Usa il valore con l'ora corretta
     };
 
     let calendarApi = selectedInfo.view.calendar;
@@ -65,26 +79,9 @@ export default function Calendar() {
     setSelectedInfo(null);
   }
 
-  async function handleDelete(clickInfo) {
-    if (window.confirm(`Vuoi eliminare l'evento "${clickInfo.event.title}"?`)) {
-      try {
-        const response = await fetch(`http://localhost:8000/api/event/${clickInfo.event.id}`, {
-          method: 'DELETE',
-        });
-
-        if (!response.ok) {
-          throw new Error("Errore nell'eliminazione dell'evento");
-        }
-        clickInfo.event.remove();
-      } catch (error) {
-        console.error('Errore:', error);
-      }
-    }
-  }
-
   async function saveEventToDB(event) {
     try {
-      const response = await fetch('http://localhost:8000/api/event', {
+      const response = await fetch(address+'api/event', {
         method: 'POST',
         credentials: "include",
         headers: {
@@ -93,10 +90,62 @@ export default function Calendar() {
         body: JSON.stringify(event),
       });
 
+      const responseText = await response.text(); // Leggi la risposta come testo
+      console.log(responseText); // Aggiungi un log per ispezionare la risposta
       if (!response.ok) {
         throw new Error("Errore nel salvataggio dell'evento");
       }
       fetchEventsFromDB();
+    } catch (error) {
+      console.error('Errore:', error);
+    }
+  }
+
+  function handleEventSelect(clickInfo) {
+    setEventToDelete({
+      id: clickInfo.event.id,
+      title: clickInfo.event.title,
+      start: clickInfo.event.start,
+      end: clickInfo.event.end,
+      description: clickInfo.event.extendedProps.description, 
+    }); // Salva l'evento da eliminare
+    setIsDeleteModalOpen(true); // Mostra il modale di conferma
+  }
+
+  function handleOpenTomatoModal() {
+    setIsModalOpen(false);       // Chiude EventModal
+    setIsTomatoModalOpen(true);  // Apre TomatoModal
+    setSelectedDate(selectedInfo.startStr); // Passa la data selezionata a TomatoModal
+  }
+
+  async function handleTomatoConfirm(eventData) {
+    const calendarApi = calendarRef.current.getApi();
+    calendarApi.addEvent(eventData);
+    await saveEventToDB(eventData);
+    setIsTomatoModalOpen(false); // Chiudi TomatoModal
+  }
+
+  function handleDeleteModalResponse(isConfirmed) {
+    if (isConfirmed && eventToDelete) {
+      deleteEventFromDB(eventToDelete.id); // Elimina l'evento dal DB
+      let calendarApi = calendarRef.current.getApi();
+      calendarApi.getEventById(eventToDelete.id)?.remove(); // Rimuovi l'evento dal calendario
+    }
+    setEventToDelete(null); // Resetta l'evento
+  }
+
+  async function deleteEventFromDB(eventId) {
+    try {
+      const response = await fetch(`${address}api/event/${eventId}`, {
+        method: 'DELETE',
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Errore nell'eliminazione dell'evento");
+      }
+
+      fetchEventsFromDB(); // Ricarica gli eventi dopo l'eliminazione
     } catch (error) {
       console.error('Errore:', error);
     }
@@ -112,18 +161,36 @@ export default function Calendar() {
           selectable={true}
           select={handleDateSelect}
           events={events}
-          eventClick={handleDelete}
+          eventClick={handleEventSelect}
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay',
+          }}
+          eventTimeFormat={{
+            hour: 'numeric',
+            minute: '2-digit',
+            meridiem: 'short' // Mostra AM/PM
           }}
         />
         <EventModal 
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)} 
           onSave={handleSaveEvent} 
-          selectedInfo={selectedInfo}  // Passa selectedInfo qui
+          onTomatoClick={handleOpenTomatoModal}
+          selectedInfo={selectedInfo}
+        />
+        <EventDeleteModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDeleteModalResponse} // Passa la risposta
+          event={eventToDelete}
+        />
+        <TomatoModal
+          isOpen={isTomatoModalOpen}
+          onClose={() => setIsTomatoModalOpen(false)}
+          onConfirm={handleTomatoConfirm}
+          selectedDate={selectedInfo?.startStr}
         />
         <style>
           {`

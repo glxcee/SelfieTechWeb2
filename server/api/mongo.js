@@ -51,7 +51,7 @@ const eventSchema = new mongoose.Schema({
     description: String,
     start: { type: String, required: true },
     end: { type: String, required: true },
-    userId: { type: String, required: true } // { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Associazione con l'utente
+    user: { type: String, required: true } // { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Associazione con l'utente
 });
 
 dev1 = 1 // 1: dev, 0: prod
