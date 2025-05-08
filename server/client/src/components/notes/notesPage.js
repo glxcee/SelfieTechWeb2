@@ -7,6 +7,9 @@ export default function NotesPage(){
     const [content, setContent] = useState('');
     const [noteId, setNoteId] = useState('');
     const [title, setTitle] = useState('');
+    const [categories, setCategories] = useState([]);
+    const [singleCategory, setSingleCategory] = useState('');
+
     const [render, setRender] = useState(true);
     const [renderedContent, setRenderedContent] = useState('');
     const [focus, setFocus] = useState(true);
@@ -47,6 +50,7 @@ export default function NotesPage(){
                 if(note.id === noteId){
                     temp[index].content = content
                     temp[index].title = title
+                    temp[index].categories = categories
                     return true
                 }
             })
@@ -64,6 +68,7 @@ export default function NotesPage(){
                     if(note.id === noteId){
                         setContent(note.content)
                         setTitle(note.title)
+                        setCategories(note.categories)
                         return true
                     }
                 })
@@ -83,7 +88,7 @@ export default function NotesPage(){
 
         useEffect(() => {
             if(book.length > 1) 
-                sortBook()
+                sortBook(book)
         }, [sort])
 
         function sortBook(currBook) {
@@ -126,7 +131,6 @@ export default function NotesPage(){
         let temp = [...book]
         temp = newNote(temp)
         
-
         sortBook(temp)
         setNoteId(temp[temp.length - 1].id)
     }
@@ -138,6 +142,7 @@ export default function NotesPage(){
         temp = newNote(temp)
         temp[temp.length - 1].title = title + " (copy)"
         temp[temp.length - 1].content = content
+        temp[temp.length - 1].categories = categories
 
         sortBook(temp)
         setNoteId(temp[temp.length - 1].id)
@@ -156,6 +161,27 @@ export default function NotesPage(){
         temp = temp.filter(note => note.id !== noteId)
         setBook(temp)
         setNoteId(temp[0].id)
+    }
+
+    function handleCategory(cat) {
+
+        if(cat[cat.length - 1] === " "){
+            updateModified()
+
+            cat = cat.slice(0, -1)
+            let temp = [...categories]
+            temp.push(cat)
+            setCategories(temp)
+            setSingleCategory('')
+        }
+        else 
+            setSingleCategory(cat)
+    }
+
+    function deleteCategory(index) {
+        let temp = [...categories]
+        temp.splice(index, 1)
+        setCategories(temp)
     }
 
     return(
@@ -199,9 +225,9 @@ export default function NotesPage(){
                     book.map((note, index) => {
 
                         return (
-                        <div key={index} onClick={() => {saveContent(); setNoteId(note.id); setMobile(false); window.scrollTo({ top: 0, behavior: 'smooth' })}} className={'w-full p-3 rounded-lg cursor-pointer '+ (noteId === note.id ? "bg-yellow-900" : "")}>
-                            <span className='text-lg pl-2 font-semibold'>{note.title}</span>
-                            <p className='text-xs'>{note.content}</p>
+                        <div key={index} onClick={() => {saveContent(); setNoteId(note.id); setMobile(false); window.scrollTo({ top: 0, behavior: 'smooth' })}} className={'w-full sm:overflow-hidden p-3 rounded-lg cursor-pointer '+ (noteId === note.id ? "bg-yellow-900" : "")}>
+                            <p className='text-lg pl-2 font-semibold overflow-ellipsis overflow-hidden'>{note.title}</p>
+                            <p className='text-xs overflow-ellipsis overflow-hidden'>{note?.content?.length > 200 ? note.content.slice(0, 200) + "..." : note.content}</p>
                         </div>
                     )})
                     }
@@ -282,6 +308,18 @@ export default function NotesPage(){
                 <div onClick={() => setRender(true)} className='w-full bg-amber-100 rounded-lg p-4'> 
                     <input className='bg-amber-100 outline-none text-2xl w-full' type="text" value={title} onChange={e => {updateModified(); setTitle(e.target.value)}} placeholder='Title' />
                 </div>
+                <div onClick={() => setRender(true)} className='w-full flex text-sm justify-center items-center bg-amber-100 rounded-lg p-4 gap-2'> 
+                    <div className='flex items-center justify-center gap-1'>
+                        {
+                            categories.map((category, index) => {
+                                return (
+                                    <span onClick={() => deleteCategory(index)} key={index} className='bg-yellow-700 hover:bg-red-600 hover:line-through text-white rounded-lg p-1 cursor-pointer transition-all duration-300'>#{category}</span>
+                                )
+                            })
+                        }
+                    </div>
+                    <input className='bg-amber-100 outline-none w-full' type="text" value={singleCategory} onChange={e => handleCategory(e.target.value)} placeholder='Categories (divide by spacebar)' />
+                </div>
                 <div onMouseEnter={() => setFocus(true)} onMouseLeave={() => setFocus(false)} className='w-full min-h-screen h-max '>
                 {
                     !render ?
@@ -293,7 +331,7 @@ export default function NotesPage(){
                     </div>
                         :
                     <div id="markdown-p" onClick={() => setRender(false)} 
-                        className={'w-full min-h-screen h-full bg-amber-100 p-4 hover:bg-amber-200 rounded-lg transition duration-300 ' + (content ? "" : "text-gray-400")}>
+                        className={'w-full overflow-x-scroll min-h-screen h-full bg-amber-100 p-4 hover:bg-amber-200 rounded-lg transition duration-300 ' + (content ? "" : "text-gray-400")}>
                         <Markdown>
                             {content ? renderedContent : "*Write your note here...*"}
                         </Markdown>
