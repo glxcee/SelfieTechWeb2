@@ -186,7 +186,7 @@ export default function NotesPage(){
 
     return(
         <div className={"flex justify-center items-start min-h-screen h-max transition-all duration-300 " + (focus ? "bg-amber-100" : "bg-amber-200")}>
-            <div className={(mobile ? "" : "hidden") + " w-full sm:w-1/3 bg-yellow-700 h-full min-h-screen rounded-none sm:rounded-r-xl text-white sm:flex flex-col items-center p-3"} onClick={() => setRender(true)}>
+            <div className={(mobile ? "" : "hidden") + " w-full sm:min-w-1/3 sm:w-1/3 bg-yellow-700 h-full min-h-screen rounded-none sm:rounded-r-xl text-white sm:flex flex-col items-center p-3"} onClick={() => setRender(true)}>
                 <div className='w-full flex items-center justify-between p-3'>
                     <div>
                         <span className='text-2xl font-bold text-center'>All Notes</span>
@@ -320,7 +320,7 @@ export default function NotesPage(){
                     </div>
                     <input className='bg-amber-100 outline-none w-full' type="text" value={singleCategory} onChange={e => handleCategory(e.target.value)} placeholder='Categories (divide by spacebar)' />
                 </div>
-                <div onMouseEnter={() => setFocus(true)} onMouseLeave={() => setFocus(false)} className='w-full min-h-screen h-max '>
+                <div onMouseEnter={() => setFocus(true)} onMouseLeave={() => setFocus(false)} className='w-full min-h-screen h-max overflow-x-auto'>
                 {
                     !render ?
                     <div className='w-full h-full bg-amber-100 p-4 rounded-lg'>
@@ -331,7 +331,7 @@ export default function NotesPage(){
                     </div>
                         :
                     <div id="markdown-p" onClick={() => setRender(false)} 
-                        className={'w-full overflow-x-scroll min-h-screen h-full bg-amber-100 p-4 hover:bg-amber-200 rounded-lg transition duration-300 ' + (content ? "" : "text-gray-400")}>
+                        className={'w-full min-h-screen h-full bg-amber-100 p-4 hover:bg-amber-200 rounded-lg transition duration-300 ' + (content ? "" : "text-gray-400")}>
                         <Markdown>
                             {content ? renderedContent : "*Write your note here...*"}
                         </Markdown>
