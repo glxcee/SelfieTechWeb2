@@ -68,7 +68,7 @@ export default function Calendar() {
         title: eventData.title,
         description: eventData.description,
         start: eventData.start,  // Usa il valore con l'ora corretta
-        end: eventData.end       // Usa il valore con l'ora corretta
+        end: eventData.end       
     };
 
     let calendarApi = selectedInfo.view.calendar;

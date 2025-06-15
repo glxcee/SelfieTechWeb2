@@ -1,7 +1,7 @@
 import {useState, useEffect} from 'react';
 import { address } from '../../utils.js';
 import { Link } from 'react-router-dom';
-import Markdown from 'react-markdown';
+//import Markdown from 'react-markdown';
 
 export default function NotesPreview(){
 

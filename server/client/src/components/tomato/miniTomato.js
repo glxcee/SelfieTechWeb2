@@ -1,20 +1,36 @@
 import { useNavigate } from 'react-router-dom';
-import './miniTomato.css'
+import { useTomato } from './tomatoContext';
+import LastTomatoInfo from './lastTomatoInfo'; 
+import './miniTomato.css';
 
-export default function MiniTomatoPage() {
-    const navigate = useNavigate();
+const formatTime = (secs) =>
+  `${String(Math.floor(secs/60)).padStart(2,'0')}:${String(secs%60).padStart(2,'0')}`;
 
-    const handleClick = () => {
-        navigate('/selfie/tomato');
-    };
+const MiniTomatoPage = () => {
+  const navigate = useNavigate();
+  const { timeLeft, isRunning, handleStartStop } = useTomato();
 
-    return (
-        <div className="flex flex-wrap overflow-hidden w-full" onClick={handleClick}>
-            <div className="tomato">
-                <div className="time">
-                    00:00
-                </div>
-            </div>
+  return (
+    <div className="tomato" onClick={() => navigate('/selfie/tomato')}>
+      <div className="upper">
+        <div className="time">
+          {formatTime(timeLeft)}
         </div>
-    );
-}
+        <button
+          onClick={e => {
+            e.stopPropagation();  // evita di navigare quando clicchi Start/Pause
+            handleStartStop();
+          }}
+        >
+          {isRunning ? 'Pause' : 'Start'}
+        </button>
+      </div>
+ 
+      <div className="info">
+        <LastTomatoInfo />
+      </div>
+    </div>
+  );
+};
+
+export default MiniTomatoPage;

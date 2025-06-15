@@ -41,9 +41,14 @@ const tomatoSchema = new mongoose.Schema({
     pauseTime: Number,
     overTime: Number,
     repetition: Number,
-    author: String,
     timeStudied: { type: Number, default: 0},
-    live: { type: Boolean, default: true }
+    live: { type: Boolean, default: true },
+    startTime: { type: Date, default: Date.now },
+})
+
+const tomatoUserSchema = new mongoose.Schema({
+    username: { type: String, unique: true, required: true },
+    tomatoes: [tomatoSchema]
 })
 
 const eventSchema = new mongoose.Schema({
@@ -61,5 +66,6 @@ module.exports = {
     Profile: mongoose.model("Profile", profileSchema),
     Book: mongoose.model("Book", bookSchema),
     Tomato: mongoose.model("Tomato", tomatoSchema),
-    Event: mongoose.model("Event", eventSchema)
+    Event: mongoose.model("Event", eventSchema), 
+    TomatoUser: mongoose.model("TomatoUser", tomatoUserSchema),
 }

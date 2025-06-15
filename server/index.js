@@ -171,6 +171,7 @@ const tomato = require('./api/tomato');
 
 app.post('/api/tomato', ensureAuthenticated, tomato.saveTomato);
 app.put('/api/tomato', ensureAuthenticated, tomato.updateTomato);
+app.get('/api/tomato/last', ensureAuthenticated, tomato.getLastTomato);
 
 // Eventi
 

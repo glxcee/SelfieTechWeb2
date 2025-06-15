@@ -12,20 +12,14 @@ export default function Home() {
               <div className="flex justify-center items-center w-full mb-5">
                     <CalendarPage />
               </div>
-              <div className="flex justify-center items-center w-full mb-5">
-                    <MiniTomatoPage />
-              </div>
           </div>
           <div className="flex flex-col items-center justify-evenly w-full h-full p-2">
               <div className="flex flex-col xl:flex-row justify-between w-full mb-5">
-                  <div className="flex justify-center items-center w-full mb-5 xl:mb-0">
-                        <MiniGpsPage />
-                  </div>
-                  <div className="flex justify-center items-center w-full mb-5 xl:mb-0">
-                        <NotificationPage />
-                  </div>
+                <div className="flex justify-center items-center w-full mb-5">
+                        <MiniTomatoPage />
+                </div>
               </div>
-              <div className="flex justify-center items-center w-full">
+              <div className="flex justify-center items-center w-full mb-5">
                     <NotesPreview />
               </div>
           </div>

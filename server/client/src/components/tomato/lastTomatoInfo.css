@@ -1,0 +1,28 @@
+.tomato-title {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.last-tomato-info {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Di default: testo allineato a sinistra tranne il titolo */
+.last-tomato-info > div:not(.tomato-title) {
+    text-align: left;
+}
+
+/* Responsive: su schermi piccoli centra tutto */
+@media (max-width: 1150px) {
+    .last-tomato-info {
+        align-items: center; /* centra orizzontalmente il contenuto */
+    }
+
+    .last-tomato-info > div {
+        text-align: center;  /* centra ogni blocco di testo */
+    }
+}

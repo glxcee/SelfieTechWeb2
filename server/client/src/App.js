@@ -7,6 +7,8 @@ import LoginPage from './login'
 import ProfilePage from './components/profile'
 import TomatoPage from './components/tomato/tomato';
 import NotesPage from './components/notes/notesPage'; 
+import { TomatoProvider } from './components/tomato/tomatoContext';
+import { TimeMachineProvider } from './components/timeMachine/timeMachineContext';
 
 import { address } from "./utils"
 
@@ -45,14 +47,18 @@ function App() {
   },[]) */
 
   return (
-    <Router>
-      <div>
-      <Routes>
-        <Route path="/" element={<LoginPage setUser={setUser} />} />
-        <Route path="/selfie/*" element={<HomeContainer user={user} />} />
-      </Routes>
-      </div>
-    </Router>
+    <TimeMachineProvider>
+      <TomatoProvider>
+        <Router>
+          <div>
+          <Routes>
+            <Route path="/" element={<LoginPage setUser={setUser} />} />
+            <Route path="/selfie/*" element={<HomeContainer user={user} />} />
+          </Routes>
+          </div>
+        </Router>
+      </TomatoProvider>
+    </TimeMachineProvider>
   )
 }
 

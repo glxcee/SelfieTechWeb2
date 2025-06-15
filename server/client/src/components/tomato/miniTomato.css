@@ -5,13 +5,57 @@
     justify-content: center;
     align-items: center;
     border-radius: 20px;
-    background-color: #f25f5f;
+    background-color: #f76b6b;
+    transition: background-color 0.3s ease; /* animazione fluida */
+}
+
+.tomato:hover {
+    background-color: #f34949; /* colore leggermente più scuro */
+}
+
+.upper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 45%;
 }
 
 .time {
-    position: relative;
+    width: 100%;
     text-align: center;
     font-size: 2.25rem; /* text-4xl */
     font-weight: 600;  /* font-semibold */
     color: #374151;  /* text-gray-700 */
+    padding: 20px;
+}
+
+.info {
+    display: flex;
+    width: 45%;
+    height: 90%;
+    font-size: 1.25rem; /* text-xl */
+    font-weight: 500; /* font-medium */
+    color: #374151; /* text-gray-700 */
+    background-color: #f34949;
+    padding: 20px;
+    border-radius: 20px;
+    align-items: center;
+}
+
+@media (max-width: 1150px) {
+    .tomato {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .time, .info {
+        width: 90%;
+    }
+
+    .info {
+        justify-content: center;
+        margin-bottom: 5%;
+        margin-top: 5%;
+    }
 }

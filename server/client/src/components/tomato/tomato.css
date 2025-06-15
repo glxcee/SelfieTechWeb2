@@ -79,11 +79,10 @@
   }
 
   .button-up {
-    width: 35%;
+    width: 70px;
     font-size: xx-large;
     font-weight: 500;
     margin: 20px;
-    overflow: hidden;
   }
 
   .button-up:hover {
