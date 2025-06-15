@@ -20,3 +20,8 @@ code {
 #markdown-p p {
   margin-bottom: 24px;
 }
+
+#markdown-p {
+  /*max-width: calc(100% - 10rem);*/
+}
+
