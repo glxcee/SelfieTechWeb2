@@ -1,34 +1,64 @@
+// Importazione dei moduli React e altri hook personalizzati
 import { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { address } from '../../utils.js';
-import { useTimeMachine } from '../timeMachine/timeMachineContext';
+import { address } from '../../utils.js'; // URL del backend
+import { useTimeMachine } from '../timeMachine/timeMachineContext'; // hook che fornisce virtualDate (orologio "finto")
 
+// Creazione del contesto
 const TomatoContext = createContext();
 export const useTomato = () => useContext(TomatoContext);
 
+// Provider del contesto
 export const TomatoProvider = ({ children }) => {
+  // Stato per controllare se il timer è attivo
   const [isRunning, setIsRunning] = useState(false);
+
+  // Stato per la fase attuale del ciclo Pomodoro (study | pause | '')
   const [currentPhase, setCurrentPhase] = useState('');
+
+  // Secondi rimanenti nella fase attuale
   const [timeLeft, setTimeLeft] = useState(0);
+
+  // Durate configurabili del timer in minuti
   const [studyDuration, setStudyDuration] = useState(25);
   const [pauseDuration, setPauseDuration] = useState(5);
-  const [overDuration, setOverDuration] = useState(0);
+  const [overDuration, setOverDuration] = useState(0); // extra tempo nell'ultimo ciclo
+
+  // Numero di cicli e ciclo corrente
   const [cycles, setCycles] = useState(2);
   const [currentCycle, setCurrentCycle] = useState(1);
+
+  // Durata totale dell'intero Pomodoro (es. 70 minuti)
   const [totalMinutes, setTotalMinutes] = useState(70);
+
+  // ID della sessione salvata nel backend
   const [tomatoId, setTomatoId] = useState(null);
+
+  // Data/ora di inizio del Pomodoro
   const [startTime, setStartTime] = useState(null);
 
-  const [elapsedBeforePause, setElapsedBeforePause] = useState(0); // tempo accumulato fino alla pausa
-  const [lastResumeTime, setLastResumeTime] = useState(null); // timestamp dell'ultima ripresa
+  // Backup dei parametri iniziali (per coerenza anche se l'utente modifica dopo l'avvio)
+  const [initialStudyDuration, setInitialStudyDuration] = useState(null);
+  const [initialPauseDuration, setInitialPauseDuration] = useState(null);
+  const [initialOverDuration, setInitialOverDuration] = useState(null);
+  const [initialCycles, setInitialCycles] = useState(null);
 
+  // Tempo accumulato prima della pausa
+  const [elapsedBeforePause, setElapsedBeforePause] = useState(0);
+  const [lastResumeTime, setLastResumeTime] = useState(null); // ultima ripresa del timer
+
+  const [newTomatoStartable, setNewTomatoStartable] = useState(true); // se un nuovo Pomodoro può essere avviato
+  const [manualPause, setManualPause] = useState(false); // se l'utente ha messo in pausa manualmente
+
+  // Orologio simulato
   const { virtualDate } = useTimeMachine();
 
-  // Ref per tracciare la data virtuale all'ultimo aggiornamento in pausa
-  const lastPausedVirtualDate = useRef(null);
+  // Flag per evitare restore multipli
+  const restoredRef = useRef(false);
 
+  // Funzione di supporto per convertire minuti in secondi
   const secToMin = (minutes) => minutes * 60;
 
-  // Salvataggio Tomato nel DB
+  // Salva una nuova sessione Pomodoro nel backend
   async function saveTomatoSession() {
     try {
       const response = await fetch(address + 'api/tomato', {
@@ -40,50 +70,50 @@ export const TomatoProvider = ({ children }) => {
           pauseTime: pauseDuration,
           overTime: overDuration,
           repetition: cycles,
-          startTime: virtualDate.toISOString(),   // includiamo virtualDate
+          startTime: virtualDate.toISOString(),
         }),
       });
       const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || 'Errore sconosciuto');
-      }
-      return data.tomato;  // ritorniamo il tomato intero
+      if (!response.ok) throw new Error(data.message || 'Errore sconosciuto');
+      return data.tomato;
     } catch (err) {
       console.error('Errore nel salvataggio tomato:', err);
       throw err;
     }
   }
 
-  // Aggiornamento Tomato nel DB
+  // Aggiorna la sessione corrente con il tempo studiato finora
   async function updateTomatoSession(tomatoId) {
+    const sDur = initialStudyDuration ?? studyDuration;
+
+    // Calcola quanto è stato studiato
     let over = 0;
     let completedCycles = currentCycle;
     if (currentPhase === 'study') {
-      over = secToMin(studyDuration) - timeLeft;
+      over = secToMin(sDur) - timeLeft;
       completedCycles -= 1;
     }
-    const studied = secToMin(studyDuration) * completedCycles + over;
+    const studied = secToMin(sDur) * completedCycles + over;
 
     try {
       const response = await fetch(address + 'api/tomato', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: tomatoId,
-          timeStudied: studied, // aggiorna il tempo studiato
+        body: JSON.stringify({ 
+          id: tomatoId, 
+          timeStudied: studied, 
+          live: false,
         }),
       });
       const data = await response.json();
-      if (response.ok) {
-        console.log('Tomato aggiornato:', data);
-      } else {
-        console.error('Errore nell\'aggiornamento:', data.message);
-      }
+      if (!response.ok) throw new Error(data.message);
+      console.log('Tomato aggiornato:', data);
     } catch (error) {
       console.error('Errore nella richiesta:', error);
     }
   }
 
+  // Calcola il miglior mix di studio/pausa/cicli per una durata totale
   function calculateCustomCycles(total) {
     if (total < 70) {
       setTotalMinutes(70);
@@ -116,18 +146,22 @@ export const TomatoProvider = ({ children }) => {
     setOverDuration(total - ((bestStudy + bestPause) * bestCycles));
   }
 
- // Start / Stop handler
+  // Avvio o pausa del Pomodoro
   async function handleStartStop() {
     const now = new Date(virtualDate);
-
-    if (!isRunning) {
-      // Avvio iniziale
-      if (!startTime) {
+    if (!isRunning || (isRunning && newTomatoStartable)) {
+      // Primo avvio
+      if (newTomatoStartable) {
         setStartTime(now.toISOString());
         setLastResumeTime(now);
         setCurrentPhase('study');
-        const firstSec = studyDuration * 60;
-        setTimeLeft(firstSec);
+        setTimeLeft(studyDuration * 60);
+        setManualPause(false); // reset flag
+        // Salvataggio parametri iniziali
+        setInitialStudyDuration(studyDuration);
+        setInitialPauseDuration(pauseDuration);
+        setInitialOverDuration(overDuration);
+        setInitialCycles(cycles);
         try {
           const saved = await saveTomatoSession();
           setTomatoId(saved._id);
@@ -137,81 +171,65 @@ export const TomatoProvider = ({ children }) => {
           setCurrentPhase('');
         }
       } else {
-        // Ripresa dalla pausa
+        // Ripresa dopo pausa
         setLastResumeTime(now);
         setIsRunning(true);
+        setManualPause(false); // reset flag
       }
     } else {
-      // Messa in pausa → aggiungi il tempo trascorso da lastResumeTime a ora
+      // Messa in pausa
       const elapsedSinceLastResume = Math.floor((now - new Date(lastResumeTime)) / 1000);
       setElapsedBeforePause((prev) => prev + elapsedSinceLastResume);
       setIsRunning(false);
+      setManualPause(true); // reset flag
     }
   }
 
+  // Reset del timer (soft reset)
   function handleRestart() {
     setIsRunning(false);
     setCurrentPhase('');
     setCurrentCycle(1);
     setTimeLeft(0);
     setStartTime(null);
+    setInitialStudyDuration(null);
+    setInitialPauseDuration(null);
+    setInitialOverDuration(null);
+    setInitialCycles(null);
   }
 
-  async function handleEndCycle() {
+  // Quando il Pomodoro è terminato
+  async function handleEndTomato() {
     if (tomatoId) {
-      console.log('updating tomato!');
       try {
         await updateTomatoSession(tomatoId);
       } catch (err) {
-        console.error('Errore nell\'aggiornamento tomato:', err);
+        console.error("Errore nell'aggiornamento tomato:", err);
       }
-    } else {
-      console.warn('tomatoId non disponibile, salto l\'update');
     }
     setIsRunning(false);
     handleRestart();
   }
 
-  function addOvertimeLastCycle() {
-    setStudyDuration((prev) => prev + overDuration);
-  }
-
-  function next() {
-    if (!isRunning && timeLeft <= 0) {
-      if (currentPhase === 'study') {
-        setCurrentPhase('pause');
-        let seconds = secToMin(pauseDuration);
-        setTimeLeft(seconds);
-        setStartTime(virtualDate.toISOString());
-        notifyUser('Pause Time');
-      } else if (currentPhase === 'pause' && currentCycle < cycles) {
-        if (currentCycle === (cycles - 1)) addOvertimeLastCycle();
-        setCurrentCycle((prev) => prev + 1);
-        setCurrentPhase('study');
-        let seconds = secToMin(studyDuration);
-        if (currentCycle === cycles) {
-          seconds += overDuration;
-        }       
-        setTimeLeft(seconds);
-        setStartTime(virtualDate.toISOString());
-        notifyUser('Study Time');
-      } else {
-        handleEndCycle();
-      }
-    }
-  }
-
+  // Mostra una notifica se il browser ha il permesso
   function notifyUser(message) {
     if (Notification.permission === 'granted') new Notification(message);
   }
 
-  // Recompute phase/cycle based on elapsed seconds
+  // Calcola dove si trova il timer dato il tempo trascorso
   const recalcPosition = (elapsed) => {
+    const sDur = initialStudyDuration ?? studyDuration;
+    const pDur = initialPauseDuration ?? pauseDuration;
+    const oDur = initialOverDuration ?? overDuration;
+    const reps = initialCycles ?? cycles;
+
     const segments = [];
-    for (let c = 1; c <= cycles; c++) {
-      const studySec = studyDuration * 60 + (c === cycles ? overDuration * 60 : 0);
+    for (let c = 1; c <= reps; c++) {
+      const studySec = sDur * 60 + (c === reps ? oDur * 60 : 0);
       segments.push({ phase: 'study', cycle: c, length: studySec });
-      if (c < cycles) segments.push({ phase: 'pause', cycle: c, length: pauseDuration * 60 });
+
+      // Aggiunge la pausa dopo lo studio
+      segments.push({ phase: 'pause', cycle: c, length: pDur * 60 });
     }
     let rem = elapsed;
     for (const seg of segments) {
@@ -223,29 +241,130 @@ export const TomatoProvider = ({ children }) => {
       }
       rem -= seg.length;
     }
-    handleEndCycle();
+    handleEndTomato();
   };
 
-  // Sync on virtualDate change (forward or backward)
+  // Effetto: ogni cambio della virtualDate o pausa/resume ricalcola il timer
   useEffect(() => {
     if (!startTime) return;
 
     const now = new Date(virtualDate);
+    const start = new Date(startTime);
+    const totalDuration = totalMinutes * 60;
 
-    let totalElapsed = elapsedBeforePause;
-    if (isRunning && lastResumeTime) {
-      const extra = Math.floor((now - new Date(lastResumeTime)) / 1000);
-      totalElapsed += extra;
-    }
-
-    if (totalElapsed < 0) {
-      handleRestart();
+    // Se siamo prima dell'inizio → timer non partito
+    if (now < start) {
+      setIsRunning(false);
+      setCurrentPhase('');
+      setTimeLeft(0);
       return;
     }
 
-    recalcPosition(totalElapsed);
-  }, [virtualDate, isRunning, startTime, elapsedBeforePause, lastResumeTime]);
+    // Se siamo in pausa, non fare nulla
+    if (manualPause) return;
 
+    // Tempo trascorso effettivo (tolto il tempo in pausa)
+    const elapsed = elapsedBeforePause + Math.floor((now - lastResumeTime) / 1000);
+
+    // Se superato, ferma tutto
+    if (elapsed >= totalDuration) {
+      setIsRunning(false);
+      setCurrentPhase('');
+      setTimeLeft(0);
+      return;
+    }
+
+    recalcPosition(elapsed);
+    setIsRunning(true);
+  }, [virtualDate, startTime, totalMinutes, lastResumeTime, elapsedBeforePause, manualPause]);
+
+
+  // Effetto: al primo render, prova a ripristinare una sessione live
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+
+    async function restoreLiveTomato() {
+      try {
+        const res = await fetch(`${address}api/tomato/last-live?virtualDate=${virtualDate.toISOString()}`);
+        if (!res.ok) return;
+        const tomato = await res.json();
+        if (!tomato.live) return;
+
+        const { studyTime, pauseTime, overTime, repetition, startTime, totalTime, _id } = tomato;
+        const start = new Date(startTime);
+        const now = new Date(virtualDate);
+        const elapsedSeconds = Math.floor((now - start) / 1000);
+        const totalSeconds = totalTime * 60;
+        if (elapsedSeconds < 0 || elapsedSeconds >= totalSeconds) return;
+
+        // Ripristina parametri
+        setStudyDuration(studyTime);
+        setPauseDuration(pauseTime);
+        setOverDuration(overTime);
+        setCycles(repetition);
+        setTotalMinutes(totalTime);
+        setStartTime(startTime);
+        setTomatoId(_id);
+        setInitialStudyDuration(studyTime);
+        setInitialPauseDuration(pauseTime);
+        setInitialOverDuration(overTime);
+        setInitialCycles(repetition);
+
+        // Ricostruisce fase e ciclo
+        const segments = [];
+        for (let c = 1; c <= repetition; c++) {
+          let studySec = studyTime * 60 + (c === repetition ? overTime * 60 : 0);
+          if (c === initialCycles) {
+            studySec += initialOverDuration * 60; // aggiunge tempo extra all'ultimo ciclo
+          }
+          segments.push({ phase: 'study', cycle: c, length: studySec });
+          if (c < repetition) segments.push({ phase: 'pause', cycle: c, length: pauseTime * 60 });
+        }
+
+        let rem = elapsedSeconds;
+        for (const seg of segments) {
+          if (rem <= seg.length) {
+            setCurrentCycle(seg.cycle);
+            setCurrentPhase(seg.phase);
+            setTimeLeft(seg.length - rem);
+            setIsRunning(true);
+            setLastResumeTime(now);
+            setElapsedBeforePause(rem);
+            return;
+          }
+          rem -= seg.length;
+        }
+      } catch (err) {
+        console.error("Errore durante il restoreLiveTomato:", err);
+      }
+    }
+
+    restoreLiveTomato();
+  }, [virtualDate]);
+
+  // Effetto: abilita o disabilita la possibilità di avviare un nuovo tomato
+  useEffect(() => {
+    if (!startTime) {
+      // Se il timer non è mai partito, posso iniziarne uno nuovo
+      setNewTomatoStartable(true);
+      return;
+    }
+
+    const now = new Date(virtualDate);
+    const start = new Date(startTime);
+    const end = new Date(start.getTime() + totalMinutes * 60 * 1000);
+
+    // Se siamo prima dell'inizio o dopo la fine → nuovo tomato avviabile
+    if (now < start || now >= end) {
+      setNewTomatoStartable(true);
+    } else {
+      // Se siamo dentro l'intervallo e c'è un timer in corso → non si può
+      setNewTomatoStartable(false);
+    }
+  }, [virtualDate, startTime, totalMinutes, isRunning]);
+
+  // Espone i valori del contesto
   return (
     <TomatoContext.Provider
       value={{
@@ -263,9 +382,9 @@ export const TomatoProvider = ({ children }) => {
         setTotalMinutes,
         handleStartStop,
         handleRestart,
-        handleEndCycle,
+        handleEndTomato,
         calculateCustomCycles,
-        next,
+        newTomatoStartable,
       }}
     >
       {children}

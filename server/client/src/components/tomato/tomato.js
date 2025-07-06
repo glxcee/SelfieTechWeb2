@@ -15,9 +15,8 @@ const PomodoroPage = () => {
     pauseDuration, 
     cycles,
     currentCycle,
-    next,
-    setTimeLeft,
-    handleEndCycle
+    handleEndTomato,
+    newTomatoStartable,
   } = useTomato();
 
   return (
@@ -71,7 +70,7 @@ const PomodoroPage = () => {
               </button>
               <button 
                 className='cycle-button'
-                onClick={handleEndCycle}> End Tomato
+                onClick={handleEndTomato}> End Tomato
               </button>
             </div>
           </div>
@@ -81,6 +80,10 @@ const PomodoroPage = () => {
             {Math.floor(timeLeft / 60).toString().padStart(2, '0')}:
             {(timeLeft % 60).toString().padStart(2, '0')}
           </div>
+          <strong>New Tomato Startable:</strong>{' '}
+          <span style={{ color: newTomatoStartable ? 'green' : 'red' }}>
+            {newTomatoStartable ? 'true ✅' : 'false ❌'}
+          </span>
         </div>
       </div>
     </div>
@@ -88,5 +91,3 @@ const PomodoroPage = () => {
 };
 
 export default PomodoroPage;
-
-

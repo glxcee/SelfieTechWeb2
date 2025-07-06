@@ -26,9 +26,9 @@ export default function LastTomatoInfo() {
         fetchLastTomato();
     }, []);
 
-    function percent(stud, tot, rep){
-        if (tot === 0 || rep === 0) return 0; // Evita la divisione per zero
-        return (stud * 100) / (tot*rep);
+    function percent(stud, tot){
+        if (tot === 0) return 0; // Evita la divisione per zero
+        return (stud * 100) / tot;
     }
 
     function tot(s, p, r, o){
@@ -41,10 +41,6 @@ export default function LastTomatoInfo() {
 
     function pauseTime(t, r) {
         return t * r
-    }
-
-    function timeLeft(t, s) {
-        return t - s;
     }
 
     function minToSec(minutes) {
@@ -71,8 +67,7 @@ export default function LastTomatoInfo() {
                     <div><strong>Study Time:</strong> {studyTime(lastTomato.studyTime, lastTomato.repetition, lastTomato.overTime)} min</div>
                     <div><strong>Pause Time:</strong> {pauseTime(lastTomato.pauseTime, lastTomato.repetition)} min</div>
                     <div><strong>Studied:</strong> {formatSecondsToMinSec(lastTomato.timeStudied)}</div>
-                    <div><strong>Time Left:</strong> {formatSecondsToMinSec(timeLeft(minToSec(studyTime(lastTomato.studyTime, lastTomato.repetition, lastTomato.overTime)), (lastTomato.timeStudied)))} </div>
-                    <div><strong>Percent:</strong> {percent(lastTomato.timeStudied, minToSec(lastTomato.studyTime), lastTomato.repetition).toFixed(2)} %</div>
+                    <div><strong>Percent:</strong> {percent(lastTomato.timeStudied, minToSec(lastTomato.totalTime)).toFixed(2)} %</div>
                 </>
             ) : (
                 !error && <div>Caricamento...</div>
