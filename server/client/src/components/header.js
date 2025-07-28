@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { address } from "../utils"
 
 export default function Header(props) {
-  const { virtualDate, setVirtualDate } = useTimeMachine();
+  const { virtualDate, setVirtualDate, resetVirtualDate, changeVirtualDate } = useTimeMachine();
 
   {/*funzione temporanea*/} 
   const [realDate, setRealDate] = useState(new Date());
@@ -37,13 +37,7 @@ export default function Header(props) {
 
   const handleChange = (e) => {
     const selected = new Date(e.target.value);
-    const current = virtualDate;
-    selected.setSeconds(current.getSeconds(), current.getMilliseconds());
-    setVirtualDate(selected);
-  };
-
-  const resetDate = () => {
-    setVirtualDate(new Date());
+    changeVirtualDate(selected); // centralizzata nel context
   };
 
   return (
@@ -78,7 +72,7 @@ export default function Header(props) {
               </label>
 
               <button
-                onClick={resetDate}
+                onClick={resetVirtualDate}
                 className="rounded-md bg-gray-200 px-3 py-1 text-sm text-gray-800 hover:bg-gray-300 transition"
               >
                 Reset Date

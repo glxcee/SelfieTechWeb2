@@ -2,7 +2,6 @@ import CalendarPage from './calendar/calendar';
 import NotesPreview from './notes/notesPreview';
 import MiniGpsPage from './gps/miniGps';
 import MiniTomatoPage from './tomato/miniTomato';
-import TimeMachinePage from './timeMachine/timeMachine';
 import NotificationPage from './notification/notification';
 
 export default function Home() {

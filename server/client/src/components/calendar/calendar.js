@@ -8,6 +8,8 @@ import EventModal from './eventModal.js';
 import EventDeleteModal from './eventDeleteModal.js';
 import TomatoModal from './tomatoModal';
 import { address } from '../../utils.js';
+import { useTimeMachine } from '../timeMachine/timeMachineContext.js';
+
 
 export default function Calendar() {
   const calendarRef = useRef(null);
@@ -22,6 +24,8 @@ export default function Calendar() {
   const [isTomatoModalOpen, setIsTomatoModalOpen] = useState(false);
 
   const [eventToDelete, setEventToDelete] = useState(null);
+
+  const { virtualDate } = useTimeMachine();
 
   useEffect(() => {
     fetchEventsFromDB();
@@ -39,6 +43,20 @@ export default function Calendar() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  useEffect(() => {
+    if (!calendarRef.current) return;
+    const calendarApi = calendarRef.current.getApi();
+
+    const now = new Date(virtualDate);
+    calendarApi.gotoDate(now);
+
+    // Cambia dinamicamente l'opzione 'now' (data "oggi")
+    calendarApi.setOption('now', now.toISOString());
+
+    // Forza refresh vista
+    calendarApi.render();
+  }, [virtualDate]);
 
   async function fetchEventsFromDB() {
     try {
@@ -162,6 +180,8 @@ export default function Calendar() {
           select={handleDateSelect}
           events={events}
           eventClick={handleEventSelect}
+          initialDate={virtualDate.toISOString()} // Imposta la data iniziale del calendario
+          now={virtualDate.toISOString()}
           headerToolbar={{
             left: 'prev,next today',
             center: 'title',
