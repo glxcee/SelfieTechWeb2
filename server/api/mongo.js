@@ -85,4 +85,5 @@ module.exports = {
     Event: mongoose.model("Event", eventSchema), 
     TomatoUser: mongoose.model("TomatoUser", tomatoUserSchema),
     VirtualDate: mongoose.model("VirtualDate", VirtualDateSchema),
+    Notification: mongoose.model("Notification", notificationSchema)
 }
