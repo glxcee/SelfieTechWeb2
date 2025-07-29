@@ -2,6 +2,20 @@ const db = require('./mongo');
 const Event = db.Event;
 const User = db.User;
 
+async function setNotifications(event) { 
+    const n1 = new db.Notification({
+            name: event.title + " reminder!",
+            description: event.title + " scheduled for " + event.start,
+            user: event.user,
+            type: event.title === "Tomato" ? "tomato" : "event", // Tipo di notifica
+            event: event._id, // Riferimento all'evento appena creato
+            date: (new Date(event.start) - 30000)
+         })
+
+    await n1.save()
+}
+
+
 // Salva un nuovo evento nel database
 async function saveEvent(req, res) {
     try {

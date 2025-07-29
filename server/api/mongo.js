@@ -65,6 +65,16 @@ const VirtualDateSchema = new mongoose.Schema({
     rDate: { type: Date, default: Date.now }
 })
 
+const notificationSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    description: { type: String, required: true },
+    date: { type: Date, default: Date.now() },
+    raed: { type: Boolean, default: false }, // Indica se la notifica è stata letta
+    user: { type: String, required: true }, // Associazione con l'utente
+    type: { type: String, required: true }, // Tipo di notifica (es. "event", "tomato", etc.)
+    event: { type: mongoose.Schema.Types.ObjectId, ref: "Event" }, // Riferimento all'evento associato
+})
+
 dev1 = 1 // 1: dev, 0: prod
 module.exports = {
     env: dev1 ? "DEV" : "PROD",
