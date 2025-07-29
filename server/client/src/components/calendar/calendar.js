@@ -9,7 +9,7 @@ import EventDeleteModal from './eventDeleteModal.js';
 import TomatoModal from './tomatoModal';
 import { address } from '../../utils.js';
 import { useTimeMachine } from '../timeMachine/timeMachineContext.js';
-
+import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 
 export default function Calendar() {
   const calendarRef = useRef(null);
@@ -26,6 +26,11 @@ export default function Calendar() {
   const [eventToDelete, setEventToDelete] = useState(null);
 
   const { virtualDate } = useTimeMachine();
+
+  // Stati per eventi periodici
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [repeatDays, setRepeatDays] = useState([]); // [1, 3, 5] -> lun, mer, ven
+  const [repeatUntil, setRepeatUntil] = useState('');
 
   useEffect(() => {
     fetchEventsFromDB();
@@ -44,6 +49,7 @@ export default function Calendar() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  /*
   useEffect(() => {
     if (!calendarRef.current) return;
     const calendarApi = calendarRef.current.getApi();
@@ -57,6 +63,7 @@ export default function Calendar() {
     // Forza refresh vista
     calendarApi.render();
   }, [virtualDate]);
+  */
 
   async function fetchEventsFromDB() {
     try {
@@ -174,7 +181,8 @@ export default function Calendar() {
       <div className="CalendarPage" style={{ width: '100%', overflow: 'hide' }}>
         <FullCalendar
           ref={calendarRef}
-          plugins={[interactionPlugin, dayGridPlugin, timeGridPlugin]}
+          plugins={[interactionPlugin, dayGridPlugin, timeGridPlugin, bootstrap5Plugin]}
+          themeSystem="bootstrap5"
           initialView="dayGridMonth"
           selectable={true}
           select={handleDateSelect}
@@ -183,7 +191,7 @@ export default function Calendar() {
           initialDate={virtualDate.toISOString()} // Imposta la data iniziale del calendario
           now={virtualDate.toISOString()}
           headerToolbar={{
-            left: 'prev,next today',
+            left: 'prev,next,today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay',
           }}

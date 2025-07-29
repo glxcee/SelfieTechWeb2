@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { address } from "../utils"
 
 export default function Header(props) {
-  const { virtualDate, setVirtualDate, resetVirtualDate, changeVirtualDate } = useTimeMachine();
+  const { virtualDate, resetVirtualDate, changeVirtualDate } = useTimeMachine();
 
   {/*funzione temporanea*/} 
   const [realDate, setRealDate] = useState(new Date());
@@ -42,12 +42,12 @@ export default function Header(props) {
 
   return (
     <header>
-      <nav className="bg-white shadow py-4 ">
-        <div className="px-8 mx-auto max-w-7xl">
-          <div className="flex items-center justify-between h-16">
-            <div className=" flex items-center">
-            <Link className="flex-shrink-0" to="/selfie">
-            <button
+      <nav className="bg-white shadow py-4 fixed top-0 left-0 w-full z-50">
+        <div className="px-2 mx-auto max-w-7xl">
+          <div className="flex items-center justify-between px-8 mx-auto max-w-7xl">
+            <div className=" flex items-center mr-4">
+              <Link className="flex-shrink-0" to="/selfie">
+              <button
                         type="button"
                         className="  flex items-center justify-center w-full rounded-md  px-4 py-2 text-sm font-medium text-gray-700  hover:bg-gray-50  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-gray-500"
                       >
@@ -61,7 +61,7 @@ export default function Header(props) {
             </div>
 
             {/* Time Machine Controls */}
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col items-center sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
               <label className="flex items-center space-x-2">
               <input
                 type="datetime-local"
@@ -78,15 +78,15 @@ export default function Header(props) {
                 Reset Date
               </button>
 
-                <div className="flex flex-col text-sm text-gray-600 space-y-1">
-                  <span>🕒 Reale: {formatWithSeconds(realDate)}</span>
-                  <span>🕒 Virtuale: {formatWithSeconds(virtualDate)}</span>
-                </div>
+              <div className="flex flex-col text-sm text-gray-600 space-y-1 text-center">
+                <span>🕒 Reale: {formatWithSeconds(realDate)}</span>
+                <span>🕒 Virtuale: {formatWithSeconds(virtualDate)}</span>
+              </div>
             </div>
             
             <div className="block">
-              <div className="flex items-center ml-4 md:ml-6">
-                <div className="relative ml-3">
+              <div className="flex items-center ml-4">
+                <div className="relative">
                   <div className="relative inline-block text-left">
                     <div>
                     <Link to="/selfie/profile">

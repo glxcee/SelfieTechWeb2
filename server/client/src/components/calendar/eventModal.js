@@ -112,7 +112,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, onTo
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <div className='upper'>
+                <div className='m-upper'>
                     <h2 className="up-font">Crea un nuovo evento</h2>
                     <button onClick={handleTomatoEvent} className='tomato-event'>🍅</button>
                 </div>

@@ -19,7 +19,7 @@ export const TomatoProvider = ({ children }) => {
   const [timeLeft, setTimeLeft] = useState(0);
 
   // Durate configurabili del timer in minuti
-  const [studyDuration, setStudyDuration] = useState(25);
+  const [studyDuration, setStudyDuration] = useState(30);
   const [pauseDuration, setPauseDuration] = useState(5);
   const [overDuration, setOverDuration] = useState(0); // extra tempo nell'ultimo ciclo
 
@@ -278,8 +278,8 @@ export const TomatoProvider = ({ children }) => {
     setIsRunning(true);
   }, [virtualDate, startTime, totalMinutes, lastResumeTime, elapsedBeforePause, manualPause]);
 
-
-  // Effetto: al primo render, prova a ripristinare una sessione live
+  // Effetto: ripristina un Pomodoro live se esiste
+  // Questo viene fatto una sola volta all'avvio del componente
   useEffect(() => {
     if (restoredRef.current) return;
     restoredRef.current = true;
@@ -288,17 +288,28 @@ export const TomatoProvider = ({ children }) => {
       try {
         const res = await fetch(`${address}api/tomato/last-live?virtualDate=${virtualDate.toISOString()}`);
         if (!res.ok) return;
+
         const tomato = await res.json();
         if (!tomato.live) return;
 
-        const { studyTime, pauseTime, overTime, repetition, startTime, totalTime, _id } = tomato;
+        const {
+          studyTime,
+          pauseTime,
+          overTime,
+          repetition,
+          startTime,
+          totalTime,
+          _id
+        } = tomato;
+
         const start = new Date(startTime);
         const now = new Date(virtualDate);
         const elapsedSeconds = Math.floor((now - start) / 1000);
         const totalSeconds = totalTime * 60;
+
         if (elapsedSeconds < 0 || elapsedSeconds >= totalSeconds) return;
 
-        // Ripristina parametri
+        // Ripristina i parametri base
         setStudyDuration(studyTime);
         setPauseDuration(pauseTime);
         setOverDuration(overTime);
@@ -311,30 +322,34 @@ export const TomatoProvider = ({ children }) => {
         setInitialOverDuration(overTime);
         setInitialCycles(repetition);
 
-        // Ricostruisce fase e ciclo
+        // Costruisce i segmenti temporali: studio e pausa per ogni ciclo
         const segments = [];
         for (let c = 1; c <= repetition; c++) {
-          let studySec = studyTime * 60 + (c === repetition ? overTime * 60 : 0);
-          if (c === initialCycles) {
-            studySec += initialOverDuration * 60; // aggiunge tempo extra all'ultimo ciclo
+          let studySec = studyTime * 60;
+          if (c === repetition) {
+            studySec += overTime * 60;
           }
           segments.push({ phase: 'study', cycle: c, length: studySec });
-          if (c < repetition) segments.push({ phase: 'pause', cycle: c, length: pauseTime * 60 });
+
+          // Aggiunge una pausa dopo ogni studio, compreso l'ultimo
+          segments.push({ phase: 'pause', cycle: c, length: pauseTime * 60 });
         }
 
+        // Determina la fase corrente in base al tempo trascorso
         let rem = elapsedSeconds;
         for (const seg of segments) {
-          if (rem <= seg.length) {
+          if (rem < seg.length) {
             setCurrentCycle(seg.cycle);
             setCurrentPhase(seg.phase);
             setTimeLeft(seg.length - rem);
             setIsRunning(true);
             setLastResumeTime(now);
-            setElapsedBeforePause(rem);
+            setElapsedBeforePause(elapsedSeconds);
             return;
           }
           rem -= seg.length;
         }
+
       } catch (err) {
         console.error("Errore durante il restoreLiveTomato:", err);
       }
@@ -342,6 +357,7 @@ export const TomatoProvider = ({ children }) => {
 
     restoreLiveTomato();
   }, [virtualDate]);
+
 
   // Effetto: abilita o disabilita la possibilità di avviare un nuovo tomato
   useEffect(() => {

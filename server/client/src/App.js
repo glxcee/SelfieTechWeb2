@@ -15,12 +15,14 @@ import { address } from "./utils"
 function HomeContainer(props) {
   return (<div>
     <Header user={props.user}/>
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/profile" element={<ProfilePage user={props.user} />} />
-      <Route path="/tomato" element={<TomatoPage />} />
-      <Route path="/notes" element={<NotesPage />} />
-    </Routes>
+    <div className="pt-48 sm:pt-24">
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/profile" element={<ProfilePage user={props.user} />} />
+        <Route path="/tomato" element={<TomatoPage />} />
+        <Route path="/notes" element={<NotesPage />} />
+      </Routes>
+    </div>
   </div>)
 }
 

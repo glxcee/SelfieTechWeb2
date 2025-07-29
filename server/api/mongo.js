@@ -59,6 +59,12 @@ const eventSchema = new mongoose.Schema({
     user: { type: String, required: true } // { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Associazione con l'utente
 });
 
+const VirtualDateSchema = new mongoose.Schema({
+    username: { type: String, unique: true, required: true },
+    vDate: { type: Date, default: Date.now },
+    rDate: { type: Date, default: Date.now }
+})
+
 dev1 = 1 // 1: dev, 0: prod
 module.exports = {
     env: dev1 ? "DEV" : "PROD",
@@ -68,4 +74,5 @@ module.exports = {
     Tomato: mongoose.model("Tomato", tomatoSchema),
     Event: mongoose.model("Event", eventSchema), 
     TomatoUser: mongoose.model("TomatoUser", tomatoUserSchema),
+    VirtualDate: mongoose.model("VirtualDate", VirtualDateSchema),
 }

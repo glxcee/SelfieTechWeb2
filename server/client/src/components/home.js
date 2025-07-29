@@ -1,8 +1,6 @@
 import CalendarPage from './calendar/calendar';
 import NotesPreview from './notes/notesPreview';
-import MiniGpsPage from './gps/miniGps';
 import MiniTomatoPage from './tomato/miniTomato';
-import NotificationPage from './notification/notification';
 
 export default function Home() {
   return (
@@ -13,12 +11,12 @@ export default function Home() {
               </div>
           </div>
           <div className="flex flex-col items-center justify-evenly w-full h-full p-2">
-              <div className="flex flex-col xl:flex-row justify-between w-full mb-5">
+              <div className="flex flex-col xl:flex-row justify-between w-full mb-2">
                 <div className="flex justify-center items-center w-full mb-5">
                         <MiniTomatoPage />
                 </div>
               </div>
-              <div className="flex justify-center items-center w-full mb-5">
+              <div className="flex justify-center items-center w-full mb-2">
                     <NotesPreview />
               </div>
           </div>

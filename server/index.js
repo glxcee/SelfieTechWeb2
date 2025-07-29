@@ -182,6 +182,12 @@ app.post('/api/event', ensureAuthenticated, eventController.saveEvent);
 app.get('/api/event', ensureAuthenticated, eventController.getEvents);
 app.delete('/api/event/:id', ensureAuthenticated, eventController.deleteEvent);
 
+// Virtual Date
+const vDate = require("./api/vDate");
+
+app.post('/api/virtualDate', ensureAuthenticated, vDate.postVirtualDate);
+app.get('/api/virtualDate', ensureAuthenticated, vDate.getVirtualDate);
+
 
 
 const build = __dirname + "/client/build/"
@@ -210,3 +216,5 @@ app.get("/api/test1", async (req, res) => {
     res.status(500).send("Database error");
   }
 });*/
+
+
