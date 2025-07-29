@@ -6,15 +6,23 @@ const User = db.User;
 async function saveEvent(req, res) {
     try {
         console.log("Richiesta ricevuta per salvare un evento:", req.body);
-        const { title, description, start, end } = req.body;
-        const user = db.env!=="DEV" ? req.user : await db.User.findOne({username:"a"})
+        const { title, description, start, end, periodic, recurrenceDays, recurrenceEndDate } = req.body;
+        const user = db.env !== "DEV" ? req.user : await db.User.findOne({ username: "a" });
 
         const newEvent = new Event({
             title,
             description,
             start,
             end,
-            user: user.username, // Associa l'evento all'utente
+            user: user.username,
+            periodic: periodic === true || periodic === 'true',  // assicura boolean
+            repeatDays: periodic ? (recurrenceDays || []).map(day => {
+                // Mappa da ['MO','WE'] a numeri [1,3] compatibili con rrule
+                // RRule usa 0=SU,1=MO,...6=SA
+                const mapDayToNum = {SU:0, MO:1, TU:2, WE:3, TH:4, FR:5, SA:6};
+                return mapDayToNum[day] ?? null;
+            }).filter(d => d !== null) : [],
+            repeatUntil: periodic ? recurrenceEndDate || null : null,
         });
 
         await newEvent.save();
@@ -29,22 +37,49 @@ async function saveEvent(req, res) {
 
 // Recupera tutti gli eventi di un utente
 async function getEvents(req, res) {
-    try {
-        const user = db.env!=="DEV" ? req.user : await db.User.findOne({username:"a"})
-        const events = await Event.find({ user: user.username });
-        res.json(events.map(event => ({
-            id: event._id.toString(), // Converte _id in stringa
-            title: event.title.toLowerCase() === 'pomodoro' ? '🍅' : event.title,   // visualizzazione del tomato nel calendar
-            description: event.description,
-            start: event.start,
-            end: event.end,
-            color: event.title.toLowerCase() === 'pomodoro' ? 'red' : 'light-blue' // Colore dinamico
-        })));
-    } catch (err) {
-        console.error("Errore nel recupero degli eventi:", err);
-        res.status(500).json({ message: "Errore del server" });
-    }
+  try {
+    const user = db.env !== "DEV" ? req.user : await db.User.findOne({ username: "a" });
+    
+    // Ottieni eventi dal DB
+    const events = await Event.find({ user: user.username });
+
+    // Mappa eventi nel formato richiesto da FullCalendar
+    const formattedEvents = events.map(event => {
+      const isPomodoro = event.title.toLowerCase() === 'pomodoro';
+      const base = {
+        id: event._id.toString(),
+        title: isPomodoro ? '🍅' : event.title,
+        description: event.description,
+        color: isPomodoro ? 'red' : 'light-blue'
+      };
+
+      if (event.periodic) {
+        const startDate = new Date(event.start);
+        const endDate = new Date(event.end);
+        const durationInSeconds = (endDate - startDate) / 1000;
+
+        base.rrule = {
+          freq: 'weekly',
+          byweekday: event.repeatDays,  // array di numeri es: [1,3,5]
+          dtstart: startDate.toISOString(),
+          until: event.repeatUntil ? new Date(event.repeatUntil).toISOString() : undefined,
+        };
+        base.duration = durationInSeconds;
+      } else {
+        base.start = event.start;
+        base.end = event.end;
+      }
+
+      return base;
+    });
+
+    res.json(formattedEvents);
+  } catch (err) {
+    console.error("Errore nel recupero degli eventi:", err);
+    res.status(500).json({ message: "Errore del server" });
+  }
 }
+
 
 // Elimina un evento specifico
 async function deleteEvent(req, res) {

@@ -56,7 +56,10 @@ const eventSchema = new mongoose.Schema({
     description: String,
     start: { type: String, required: true },
     end: { type: String, required: true },
-    user: { type: String, required: true } // { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }, // Associazione con l'utente
+    user: { type: String, required: true },
+    periodic: { type: Boolean, default: false },
+    repeatDays: [Number],  // es: [1, 3, 5]
+    repeatUntil: String    // es: "2025-08-31"
 });
 
 const VirtualDateSchema = new mongoose.Schema({

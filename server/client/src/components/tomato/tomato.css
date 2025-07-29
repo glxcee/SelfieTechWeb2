@@ -22,6 +22,10 @@
     padding-bottom: 85px;
   }
 
+  .opened {
+    margin-top: 100px;
+  }
+
   @media (max-width: 770px) {
     .timer-box {
         width: 96%;
