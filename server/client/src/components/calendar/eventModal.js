@@ -14,16 +14,28 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, onTo
     const [untilSnooze, setUntilSnooze] = useState(false);
     const [earlyTimeUnit, setEarlyTimeUnit] = useState('minuti');
     const [repeatEveryUnit, setRepeatEveryUnit] = useState('minuti');
+    const [hasTime, setHasTime] = useState(true);
+
     // Per gli eventi periodici
     const [isPeriodic, setIsPeriodic] = useState(false);
     const [recurrenceDays, setRecurrenceDays] = useState([]); // array di giorni: ['MO', 'WE', 'FR']
     const [recurrenceEndDate, setRecurrenceEndDate] = useState('');
+
+    // Per le scadenze 
+    const [isScadenza, setIsScadenza] = useState(false);
+    const [scadenzaDate, setScadenzaDate] = useState('');
+    const [scadenzaTime, setScadenzaTime] = useState('08:00');
 
 
     useEffect(() => {
         if (selectedInfo) {
             setTitle('');
             setDescription('');
+            setRecurrenceDays([]);
+            setRecurrenceEndDate('');
+            setIsPeriodic(false);
+            setIsScadenza(false);
+            setHasTime(true);
             // Selezione inizio e fine manuali con orari specifici
             const startDate = selectedInfo.startStr ? new Date(selectedInfo.startStr) : new Date();
             const start = new Date(startDate);
@@ -138,8 +150,27 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, onTo
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <div className='m-upper'>
-                    <h2 className="up-font">Crea un nuovo evento</h2>
+                                <div className="m-upper flex justify-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setIsScadenza(false)}
+                        className={`px-4 py-2 border transition w-32
+                        ${!isScadenza
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-white text-black border-gray-300 hover:bg-gray-100'}`}
+                    >
+                        Evento
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setIsScadenza(true)}
+                        className={`px-4 py-2 border transition w-32
+                        ${isScadenza
+                            ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-white text-black border-gray-300 hover:bg-gray-100'}`}
+                    >
+                        Scadenza
+                    </button>
                     <button onClick={handleTomatoEvent} className='tomato-event'>🍅</button>
                 </div>
                 <div className="write-info">
@@ -160,96 +191,169 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, onTo
                             onChange={(e) => setDescription(e.target.value)}
                         />
                     </div>
+
+                    {/* SWITCH "Tutto il giorno" fuori, sempre visibile */}
+                    <div className="flex items-center gap-4 mt-1 mb-1">
+                        <span className="font-semibold text-lg">Tutto il giorno</span>
+                        <div className="relative flex items-center">
+                            <input
+                                type="checkbox"
+                                id="custom-switch"
+                                className="custom-toggle-checkbox"
+                                checked={hasTime}
+                                onChange={(e) => setHasTime(e.target.checked)}
+                            />
+                            <label htmlFor="custom-switch" className="custom-toggle-label">Toggle</label>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="recurrence-section">
+                {!isScadenza && (
+                <>
+                    <div className="time-info">
+                    {!isPeriodic && (
+                        <>
+                        {!hasTime ? (
+                            <>
+                            <label>Inizio:</label>
+                            <div className="date-time">
+                                <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => handleDateTimeChange('startDate', e.target.value)}
+                                onKeyDown={(e) => e.preventDefault()}
+                                onClick={(e) => e.target.showPicker()}
+                                />
+                                <select
+                                className="time-select"
+                                value={startTime}
+                                onChange={(e) => handleDateTimeChange('startTime', e.target.value)}
+                                >
+                                {generateTimeOptions().map((time) => (
+                                    <option key={time} value={time}>{time}</option>
+                                ))}
+                                </select>
+                            </div>
 
-                    <label>
-                        <input
-                        type="checkbox"
-                        checked={isPeriodic}
-                        onChange={(e) => setIsPeriodic(e.target.checked)}
-                        />
+                            <label>Fine:</label>
+                            <div className="date-time">
+                                <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => handleDateTimeChange('endDate', e.target.value)}
+                                onKeyDown={(e) => e.preventDefault()}
+                                onClick={(e) => e.target.showPicker()}
+                                />
+                                <select
+                                className="time-select"
+                                value={endTime}
+                                onChange={(e) => handleDateTimeChange('endTime', e.target.value)}
+                                >
+                                {generateTimeOptions().map((time) => (
+                                    <option key={time} value={time}>{time}</option>
+                                ))}
+                                </select>
+                            </div>
+                            </>
+                        ) : (
+                            <>
+                            <input
+                                type="date"
+                                className="border px-3 py-2 rounded shadow text-lg"
+                                value={scadenzaDate}
+                                onChange={(e) => setScadenzaDate(e.target.value)}
+                            />
+                            </>
+                        )}
+                        </>
+                    )}
+                    
+                    </div>
+
+                    <div className="recurrence-section">
+                    <button
+                        type="button"
+                        onClick={() => setIsPeriodic(!isPeriodic)}
+                        className={`px-4 py-2 rounded-full border transition mt-3
+                        ${isPeriodic 
+                            ? 'bg-blue-500 text-white border-blue-500' 
+                            : 'bg-white text-black border-gray-300 hover:bg-gray-100'}`}
+                    >
                         Evento ricorrente
-                    </label>
+                    </button>
 
                     {isPeriodic && (
                         <>
-                        <div className="weekday-selector">
-                            {['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'].map((day, i) => (
-                            <label key={day}>
-                                <input
-                                type="checkbox"
-                                checked={recurrenceDays.includes(day)}
-                                onChange={(e) => {
-                                    if (e.target.checked) {
-                                    setRecurrenceDays([...recurrenceDays, day]);
+                        <div className="weekday-selector flex flex-wrap gap-2 mt-2">
+                            {[ 
+                            { label: 'Lun', value: 'MO' },
+                            { label: 'Mar', value: 'TU' },
+                            { label: 'Mer', value: 'WE' },
+                            { label: 'Gio', value: 'TH' },
+                            { label: 'Ven', value: 'FR' },
+                            { label: 'Sab', value: 'SA' },
+                            { label: 'Dom', value: 'SU' }    
+                            ].map(({ label, value }) => {
+                            const isSelected = recurrenceDays.includes(value);
+                            return (
+                                <button
+                                key={value}
+                                type="button"
+                                onClick={() => {
+                                    if (isSelected) {
+                                    setRecurrenceDays(recurrenceDays.filter(d => d !== value));
                                     } else {
-                                    setRecurrenceDays(recurrenceDays.filter(d => d !== day));
+                                    setRecurrenceDays([...recurrenceDays, value]);
                                     }
                                 }}
-                                />
-                                {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'][i]}
-                            </label>
-                            ))}
+                                className={`px-4 py-2 rounded-full border transition 
+                                    ${isSelected 
+                                    ? 'bg-blue-500 text-white border-blue-500' 
+                                    : 'bg-white text-black border-gray-300 hover:bg-gray-100'}
+                                `}
+                                >
+                                {label}
+                                </button>
+                            );
+                            })}
                         </div>
 
-                        <div className="recurrence-end">
-                            <label>Fine ricorrenza:</label>
+                        <div className="recurrence-end mt-4">
+                            <label className="block mb-1">Fine ricorrenza:</label>
                             <input
                             type="date"
+                            className="border px-2 py-1 rounded w-full"
                             value={recurrenceEndDate}
                             onChange={(e) => setRecurrenceEndDate(e.target.value)}
                             />
                         </div>
                         </>
                     )}
-                </div>
+                    </div>
+                    </>
+                )}
 
-                <div className="time-info">
-                    {!isPeriodic && (
-                        <>
-                        <label>Inizio:</label>
-                        <div className="date-time">
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => handleDateTimeChange('startDate', e.target.value)}
-                                onKeyDown={(e) => e.preventDefault()}
-                                onClick={(e) => e.target.showPicker()}
-                            />
-                            <select
-                                className="time-select"
-                                value={startTime}
-                                onChange={(e) => handleDateTimeChange('startTime', e.target.value)}
-                            >
-                                {generateTimeOptions().map((time) => (
-                                    <option key={time} value={time}>{time}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <label>Fine:</label>
-                        <div className="date-time">
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => handleDateTimeChange('endDate', e.target.value)}
-                                onKeyDown={(e) => e.preventDefault()}
-                                onClick={(e) => e.target.showPicker()}
-                            />
-                            <select
-                                className="time-select"
-                                value={endTime}
-                                onChange={(e) => handleDateTimeChange('endTime', e.target.value)}
-                            >
-                                {generateTimeOptions().map((time) => (
-                                    <option key={time} value={time}>{time}</option>
-                                ))}
-                            </select>
-                        </div>
-                        </>
+                {isScadenza && (
+                <div className="mt-6 flex flex-col items-center gap-4">
+                    {/* Input per la data di scadenza */}
+                    <input
+                    type="date"
+                    className="border px-3 py-2 rounded shadow text-lg"
+                    value={scadenzaDate}
+                    onChange={(e) => setScadenzaDate(e.target.value)}
+                    />
+
+                    {/* Input orario, visibile solo se hasTime è true */}
+                    {!hasTime && (
+                    <input
+                        type="time"
+                        className="mt-2 border px-3 py-2 rounded shadow text-xl"
+                        value={scadenzaTime}
+                        onChange={(e) => setScadenzaTime(e.target.value)}
+                    />
                     )}
                 </div>
+                )}
 
                 <div className="flex flex-col items-center justify-center pt-4 gap-1">
                     <h1 className='text-lg font-bold'>Config delle notifiche</h1>

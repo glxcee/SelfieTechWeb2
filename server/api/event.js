@@ -1,6 +1,5 @@
 const db = require('./mongo');
 const Event = db.Event;
-const User = db.User;
 
 async function setNotifications(event, config) { 
     const n1 = new db.Notification({
@@ -15,7 +14,6 @@ async function setNotifications(event, config) {
 
     await n1.save()
 }
-
 
 // Salva un nuovo evento nel database
 async function saveEvent(req, res) {
@@ -34,7 +32,7 @@ async function saveEvent(req, res) {
             repeatDays: periodic ? (recurrenceDays || []).map(day => {
                 // Mappa da ['MO','WE'] a numeri [1,3] compatibili con rrule
                 // RRule usa 0=SU,1=MO,...6=SA
-                const mapDayToNum = {SU:0, MO:1, TU:2, WE:3, TH:4, FR:5, SA:6};
+                const mapDayToNum = {MO:0, TU:1, WE:2, TH:3, FR:4, SA:5, SU:6};
                 return mapDayToNum[day] ?? null;
             }).filter(d => d !== null) : [],
             repeatUntil: periodic ? recurrenceEndDate || null : null,
