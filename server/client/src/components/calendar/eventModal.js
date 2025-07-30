@@ -9,6 +9,12 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, onTo
     const [endDate, setEndDate] = useState('');
     const [endTime, setEndTime] = useState('');
 
+    const [earlyTime, setEarlyTime] = useState(0);
+    const [repeatEvery, setRepeatEvery] = useState(0);
+    const [untilSnooze, setUntilSnooze] = useState(false);
+    const [earlyTimeUnit, setEarlyTimeUnit] = useState('minuti');
+    const [repeatEveryUnit, setRepeatEveryUnit] = useState('minuti');
+
     useEffect(() => {
         if (selectedInfo) {
             setTitle('');
@@ -96,12 +102,24 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, onTo
         
         const startDateTime = `${startDate}T${startTime}`;
         const endDateTime = `${endDate}T${endTime}`;
+
+        let multiplier1 = 60000, multiplier2 = 60000
+        if (earlyTimeUnit === 'ore') multiplier1 = 3600000;
+        else if (earlyTimeUnit === 'giorni') multiplier1 = 86400000;
+
+        if (repeatEveryUnit === 'ore') multiplier2 = 3600000;
+        else if (repeatEveryUnit === 'giorni') multiplier2 = 86400000;
     
         onSave({
             title,
             description,
             start: startDateTime,
-            end: endDateTime
+            end: endDateTime,
+            notifyConfig: {
+                earlyTime: earlyTime * multiplier1,
+                repeatEvery: repeatEvery * multiplier2,
+                untilSnooze
+            }
         });
     
         onClose();
@@ -174,6 +192,40 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, onTo
                                 <option key={time} value={time}>{time}</option>
                             ))}
                         </select>
+                    </div>
+                </div>
+
+                <div className="flex flex-col items-center justify-center pt-4 gap-1">
+                    <h1 className='text-lg font-bold'>Config delle notifiche</h1>
+                    <span className='text-sm'>Avviso prima dell'evento</span>
+                    <div className='flex items-center justify-content-center text-sm gap-2'>
+                        <input className='rounded-lg border p-1' type='number' min={0} defaultValue={5} onChange={e => setEarlyTime(e.target.value)} />
+                            <select className='rounded-md border' onChange={e => setEarlyTimeUnit(e.target.value)} value={earlyTimeUnit}> 
+                                <option>minuti</option>
+                                <option>ore</option>
+                                <option>giorni</option>
+                            </select>
+                    </div>
+
+                    <span className='text-sm'>Ripeti ogni</span>
+                    <div className='flex items-center justify-content-center text-sm gap-2'>
+                        <input className='rounded-lg border p-1' type='number' min={0} defaultValue={0} onChange={e => setRepeatEvery(e.target.value)} />
+                            <select className='rounded-md border' onChange={e => setRepeatEveryUnit(e.target.value)} value={repeatEveryUnit}> 
+                                <option>minuti</option>
+                                <option>ore</option>
+                                <option>giorni</option>
+                            </select>
+                        
+                    </div>
+
+                    <div className='flex items-center justify-center text-md gap-2'>
+                        <input
+                            type="checkbox"
+                            className='mt-2 bg-gray-300'
+                            checked={untilSnooze}
+                            onChange={(e) => setUntilSnooze(e.target.checked)}
+                        />
+                        <span className='pt-1'>Stop when snooze</span>
                     </div>
                 </div>
 
