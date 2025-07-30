@@ -6,7 +6,6 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import './calendar.css';
 import EventModal from './eventModal.js';
 import EventDeleteModal from './eventDeleteModal.js';
-import TomatoModal from './tomatoModal';
 import { address } from '../../utils.js';
 import { useTimeMachine } from '../timeMachine/timeMachineContext.js';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
@@ -136,12 +135,13 @@ export default function Calendar() {
     }); // Salva l'evento da eliminare
     setIsDeleteModalOpen(true); // Mostra il modale di conferma
   }
-
+/*
   function handleOpenTomatoModal() {
     setIsModalOpen(false);       // Chiude EventModal
     setIsTomatoModalOpen(true);  // Apre TomatoModal
     setSelectedDate(selectedInfo.startStr); // Passa la data selezionata a TomatoModal
   }
+
 
   async function handleTomatoConfirm(eventData) {
     const calendarApi = calendarRef.current.getApi();
@@ -149,7 +149,7 @@ export default function Calendar() {
     await saveEventToDB(eventData);
     setIsTomatoModalOpen(false); // Chiudi TomatoModal
   }
-
+*/
   function handleDeleteModalResponse(isConfirmed) {
     if (isConfirmed && eventToDelete) {
       deleteEventFromDB(eventToDelete.id); // Elimina l'evento dal DB
@@ -205,7 +205,7 @@ export default function Calendar() {
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)} 
           onSave={handleSaveEvent} 
-          onTomatoClick={handleOpenTomatoModal}
+          // onTomatoClick={handleOpenTomatoModal}
           selectedInfo={selectedInfo}
         />
         <EventDeleteModal
@@ -213,12 +213,6 @@ export default function Calendar() {
           onClose={() => setIsDeleteModalOpen(false)}
           onConfirm={handleDeleteModalResponse} // Passa la risposta
           event={eventToDelete}
-        />
-        <TomatoModal
-          isOpen={isTomatoModalOpen}
-          onClose={() => setIsTomatoModalOpen(false)}
-          onConfirm={handleTomatoConfirm}
-          selectedDate={selectedInfo?.startStr}
         />
         <style>
           {`
