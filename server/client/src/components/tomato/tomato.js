@@ -25,7 +25,7 @@ const PomodoroPage = () => {
       <div className={`timer-box ${!isRunning ? 'paused-padding' : ''}`}>
         <div className="up">
           {newTomatoStartable && (
-            <div className="controls">
+            <div className={`controls ${!isRunning ? 'opened' : ''}`}>
               <button 
                 className='button-up'
                 onClick={() => { 

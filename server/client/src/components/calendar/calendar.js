@@ -10,6 +10,7 @@ import TomatoModal from './tomatoModal';
 import { address } from '../../utils.js';
 import { useTimeMachine } from '../timeMachine/timeMachineContext.js';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
+import rrulePlugin from '@fullcalendar/rrule';
 
 export default function Calendar() {
   const calendarRef = useRef(null);
@@ -26,11 +27,6 @@ export default function Calendar() {
   const [eventToDelete, setEventToDelete] = useState(null);
 
   const { virtualDate } = useTimeMachine();
-
-  // Stati per eventi periodici
-  const [isRecurring, setIsRecurring] = useState(false);
-  const [repeatDays, setRepeatDays] = useState([]); // [1, 3, 5] -> lun, mer, ven
-  const [repeatUntil, setRepeatUntil] = useState('');
 
   useEffect(() => {
     fetchEventsFromDB();
@@ -92,8 +88,11 @@ export default function Calendar() {
     const event = {
         title: eventData.title,
         description: eventData.description,
-        start: eventData.start,  // Usa il valore con l'ora corretta
+        start: eventData.start,
         end: eventData.end,
+        periodic: eventData.periodic || false,
+        recurrenceDays: eventData.periodic ? eventData.recurrenceDays : null,
+        recurrenceEndDate: eventData.periodic ? eventData.recurrenceEndDate : null,
         notifyConfig: eventData.notifyConfig
     };
 
@@ -182,7 +181,7 @@ export default function Calendar() {
       <div className="CalendarPage" style={{ width: '100%', overflow: 'hide' }}>
         <FullCalendar
           ref={calendarRef}
-          plugins={[interactionPlugin, dayGridPlugin, timeGridPlugin, bootstrap5Plugin]}
+          plugins={[interactionPlugin, dayGridPlugin, timeGridPlugin, bootstrap5Plugin, rrulePlugin]}
           themeSystem="bootstrap5"
           initialView="dayGridMonth"
           selectable={true}
