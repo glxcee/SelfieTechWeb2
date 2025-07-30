@@ -14,7 +14,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
     const [untilSnooze, setUntilSnooze] = useState(false);
     const [earlyTimeUnit, setEarlyTimeUnit] = useState('minuti');
     const [repeatEveryUnit, setRepeatEveryUnit] = useState('minuti');
-    const [hasTime, setHasTime] = useState(true);
+    const [allDay, setAllDay] = useState(false);
 
     // Per gli eventi periodici
     const [isPeriodic, setIsPeriodic] = useState(false);
@@ -29,7 +29,6 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
     // Per i tomato
     const [isTomato, setIsTomato] = useState(false);
     const [date, setDate] = useState('');
-    const [startTomato, setStartTomato] = useState(getRoundedStartTime()); // Imposta l'orario di inizio al quarto d'ora più vicino
     const [duration, setDuration] = useState(75); // default Pomodoro 75 min
 
     useEffect(() => {
@@ -40,7 +39,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
             setRecurrenceEndDate('');
             setIsPeriodic(false);
             setIsScadenza(false);
-            setHasTime(false);
+            setAllDay(false);
             setIsTomato(false);
             setDate('');
             setDuration(75);
@@ -54,6 +53,8 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
             end.setHours(10, 0, 0, 0); // 10:00
             
             setStartDate(start.toISOString().split('T')[0]);
+            setScadenzaDate(start.toISOString().split('T')[0]);
+            setDate(start.toISOString().split('T')[0]);
             setStartTime(start.toTimeString().slice(0, 5));
             setEndDate(end.toISOString().split('T')[0]);
             setEndTime(end.toTimeString().slice(0, 5));
@@ -120,9 +121,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
         if (!title || !startDate || !startTime || !endDate || !endTime) {
             return alert('Compila tutti i campi obbligatori');
         }
-        
-        const startDateTime = `${startDate}T${startTime}`;
-        const endDateTime = `${endDate}T${endTime}`;
+        console.log("Salvataggio evento");
 
         let multiplier1 = 60000, multiplier2 = 60000
         if (earlyTimeUnit === 'ore') multiplier1 = 3600000;
@@ -134,8 +133,9 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
         onSave({
             title,
             description,
-            start: startDateTime,
-            end: endDateTime,
+            start: !allDay ? `${startDate}T${startTime}` : `${startDate}`,
+            end: !allDay ? `${endDate}T${endTime}` : `${endDate}`,
+            allDay: allDay,
             notifyConfig: {
                 earlyTime: earlyTime * multiplier1,
                 repeatEvery: repeatEvery * multiplier2,
@@ -143,27 +143,14 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
             },
             periodic: isPeriodic,
             recurrenceDays,
-            recurrenceEndDate: isPeriodic ? recurrenceEndDate : null
+            recurrenceEndDate: isPeriodic ? recurrenceEndDate : null,
+            scadenza: isScadenza,
         });
     
         onClose();
     }
 
     /*funzioni per il tomato*/
-    // Funzione per ottenere l'orario arrotondato al quarto d'ora più vicino
-    function roundToNextQuarterHour(date) {
-        const ms = 1000 * 60 * 15; // 15 minuti in millisecondi
-        return new Date(Math.ceil(date.getTime() / ms) * ms);
-    }
-
-    // Funzione per generare l'orario di inizio arrotondato al quarto d'ora più vicino
-    function getRoundedStartTime() {
-        const now = new Date();
-        const roundedDate = roundToNextQuarterHour(now);
-        const hours = roundedDate.getHours().toString().padStart(2, '0');
-        const minutes = roundedDate.getMinutes().toString().padStart(2, '0');
-        return `${hours}:${minutes}`;
-    }
 
     // Funzione per generare le opzioni dell'orario
     function generateTimeOptions() {
@@ -180,11 +167,6 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
 
     // Funzione per gestire il submit del modulo
     function handleTomatoSubmit() {
-        if (!date || !startTime || !duration) {
-            alert("Compila tutti i campi");
-            return;
-        }
-
         const [hours, minutes] = startTime.split(":").map(Number);
         const start = new Date(date);
         start.setHours(hours, minutes, 0, 0);
@@ -209,6 +191,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
             description: 'Pomodoro di studio',
             start: start.toISOString(),
             end: end.toISOString(),
+            allDay: false,
             notifyConfig: {
                 earlyTime: earlyTime * multiplier1,
                 repeatEvery: repeatEvery * multiplier2,
@@ -237,7 +220,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <div className="modal-header m-upper flex justify-center gap-2">
+                <div className="modal-header m-upper flex justify-center gap-2 mt-2">
                     <button
                         type="button"
                         onClick={() => {
@@ -309,8 +292,8 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
                                     type="checkbox"
                                     id="custom-switch"
                                     className="custom-toggle-checkbox"
-                                    checked={hasTime}
-                                    onChange={(e) => setHasTime(e.target.checked)}
+                                    checked={allDay}
+                                    onChange={(e) => setAllDay(e.target.checked)}
                                 />
                                 <label htmlFor="custom-switch" className="custom-toggle-label">Toggle</label>
                             </div>
@@ -324,7 +307,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
                         <div className="time-info">
                         {!isPeriodic && (
                             <>
-                            {!hasTime ? (
+                            {!allDay ? (
                                 <>
                                 <label>Inizio:</label>
                                 <div className="date-time">
@@ -456,8 +439,8 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
                         onChange={(e) => setScadenzaDate(e.target.value)}
                         />
 
-                        {/* Input orario, visibile solo se hasTime è true */}
-                        {!hasTime && (
+                        {/* Input orario, visibile solo se allDay è true */}
+                        {!allDay && (
                         <input
                             type="time"
                             className="mt-2 border px-3 py-2 rounded shadow text-xl"

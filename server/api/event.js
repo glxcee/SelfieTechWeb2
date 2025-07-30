@@ -19,7 +19,7 @@ async function setNotifications(event, config) {
 async function saveEvent(req, res) {
     try {
         console.log("Richiesta ricevuta per salvare un evento:", req.body);
-        const { title, description, start, end, periodic, recurrenceDays, recurrenceEndDate, notifyConfig } = req.body;
+        const { title, description, start, end, allDay, periodic, recurrenceDays, recurrenceEndDate, notifyConfig, scadenza } = req.body;
         const user = db.env !== "DEV" ? req.user : await db.User.findOne({ username: "a" });
 
         const newEvent = new Event({
@@ -27,8 +27,9 @@ async function saveEvent(req, res) {
             description,
             start,
             end,
+            allDay: allDay === true || allDay === 'true',
             user: user.username,
-            periodic: periodic === true || periodic === 'true',  // assicura boolean
+            periodic: periodic === true || periodic === 'true',
             repeatDays: periodic ? (recurrenceDays || []).map(day => {
                 // Mappa da ['MO','WE'] a numeri [1,3] compatibili con rrule
                 // RRule usa 0=SU,1=MO,...6=SA
@@ -36,6 +37,7 @@ async function saveEvent(req, res) {
                 return mapDayToNum[day] ?? null;
             }).filter(d => d !== null) : [],
             repeatUntil: periodic ? recurrenceEndDate || null : null,
+            scadenza: scadenza === true || scadenza === 'true',
         });
 
         await newEvent.save();
@@ -62,11 +64,26 @@ async function getEvents(req, res) {
     // Mappa eventi nel formato richiesto da FullCalendar
     const formattedEvents = events.map(event => {
       const isPomodoro = event.title.toLowerCase() === 'pomodoro';
+
+      // Determina il colore dell'evento
+      let color;
+      if (isPomodoro) {
+        color = 'red';
+      } else if (event.scadenza === true && event.completed === false) {
+        color = 'grey';
+      } else if (event.scadenza === true && event.completed === true) {
+        color = 'green';
+      } else {
+        color = 'light-blue';
+      }
+
       const base = {
         id: event._id.toString(),
         title: isPomodoro ? '🍅' : event.title,
         description: event.description,
-        color: isPomodoro ? 'red' : 'light-blue'
+        color: color,
+        scadenza: event.scadenza,
+        completed: event.completed,
       };
 
       if (event.periodic) {
@@ -84,6 +101,7 @@ async function getEvents(req, res) {
       } else {
         base.start = event.start;
         base.end = event.end;
+        base.allDay = event.allDay;
       }
 
       return base;
@@ -115,4 +133,25 @@ async function deleteEvent(req, res) {
     }
 }
 
-module.exports = { saveEvent, getEvents, deleteEvent };
+// Aggiorna lo stato completed di un evento
+async function updateEventCompleted(req, res) {
+    try {
+        const { completed } = req.body;
+
+        const event = await Event.findById(req.params.id);
+        if (!event) {
+            return res.status(404).json({ message: "Evento non trovato" });
+            console.log("Evento non trovato con ID:", req.params.id);
+        }
+
+        event.completed = completed === true || completed === 'true';
+        await event.save();
+
+        res.json({ message: "Stato completato aggiornato", event });
+    } catch (err) {
+        console.error("Errore nell'aggiornamento completato:", err);
+        res.status(500).json({ message: "Errore del server" });
+    }
+}
+
+module.exports = { saveEvent, getEvents, deleteEvent, updateEventCompleted };

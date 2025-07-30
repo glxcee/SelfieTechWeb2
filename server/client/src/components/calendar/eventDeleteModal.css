@@ -1,4 +1,4 @@
-.modal-overlay {
+.dmodal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -11,7 +11,7 @@
     z-index: 10000; /* Assicura che sia sopra il calendario */
 }
 
-.modal {
+.dmodal {
     display: flex;
     flex-direction: column;
     width: 250px;

@@ -10,18 +10,19 @@ import { address } from '../../utils.js';
 import { useTimeMachine } from '../timeMachine/timeMachineContext.js';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import rrulePlugin from '@fullcalendar/rrule';
+import { render } from '@fullcalendar/core/preact.js';
 
 export default function Calendar() {
   const calendarRef = useRef(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
   const [events, setEvents] = useState([]);
+  const [calendarKey, setCalendarKey] = useState(0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInfo, setSelectedInfo] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isTomatoModalOpen, setIsTomatoModalOpen] = useState(false);
 
   const [eventToDelete, setEventToDelete] = useState(null);
 
@@ -32,8 +33,8 @@ export default function Calendar() {
 
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
-      calendarApi.render();
-      calendarApi.setOption('contentHeight', 450);
+      // calendarApi.render();
+      calendarApi.setOption('contentHeight', 500);
     }
 
     function handleResize() {
@@ -43,22 +44,6 @@ export default function Calendar() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  /*
-  useEffect(() => {
-    if (!calendarRef.current) return;
-    const calendarApi = calendarRef.current.getApi();
-
-    const now = new Date(virtualDate);
-    calendarApi.gotoDate(now);
-
-    // Cambia dinamicamente l'opzione 'now' (data "oggi")
-    calendarApi.setOption('now', now.toISOString());
-
-    // Forza refresh vista
-    calendarApi.render();
-  }, [virtualDate]);
-  */
 
   async function fetchEventsFromDB() {
     try {
@@ -89,10 +74,12 @@ export default function Calendar() {
         description: eventData.description,
         start: eventData.start,
         end: eventData.end,
+        allDay: eventData.allDay || false,
         periodic: eventData.periodic || false,
         recurrenceDays: eventData.periodic ? eventData.recurrenceDays : null,
         recurrenceEndDate: eventData.periodic ? eventData.recurrenceEndDate : null,
-        notifyConfig: eventData.notifyConfig
+        notifyConfig: eventData.notifyConfig, 
+        scadenza: eventData.scadenza || false,
     };
 
     let calendarApi = selectedInfo.view.calendar;
@@ -131,25 +118,13 @@ export default function Calendar() {
       title: clickInfo.event.title,
       start: clickInfo.event.start,
       end: clickInfo.event.end,
-      description: clickInfo.event.extendedProps.description, 
+      description: clickInfo.event.extendedProps.description,
+      scadenza: clickInfo.event.extendedProps.scadenza,
+      completed: clickInfo.event.extendedProps.completed,
     }); // Salva l'evento da eliminare
     setIsDeleteModalOpen(true); // Mostra il modale di conferma
   }
-/*
-  function handleOpenTomatoModal() {
-    setIsModalOpen(false);       // Chiude EventModal
-    setIsTomatoModalOpen(true);  // Apre TomatoModal
-    setSelectedDate(selectedInfo.startStr); // Passa la data selezionata a TomatoModal
-  }
 
-
-  async function handleTomatoConfirm(eventData) {
-    const calendarApi = calendarRef.current.getApi();
-    calendarApi.addEvent(eventData);
-    await saveEventToDB(eventData);
-    setIsTomatoModalOpen(false); // Chiudi TomatoModal
-  }
-*/
   function handleDeleteModalResponse(isConfirmed) {
     if (isConfirmed && eventToDelete) {
       deleteEventFromDB(eventToDelete.id); // Elimina l'evento dal DB
@@ -176,9 +151,21 @@ export default function Calendar() {
     }
   }
 
+  function handleEventUpdate(updatedEvent) {
+    setEvents(prevEvents =>
+      prevEvents.map(ev =>
+        ev.id === updatedEvent.id
+          ? { ...ev, completed: updatedEvent.completed } // crea nuovo oggetto evento
+          : ev
+      )
+    );
+    let calendarApi = calendarRef.current.getApi();
+    calendarApi.refetchEvents()
+  }
+
   return (
     <div className='outBox'>
-      <div className="CalendarPage" style={{ width: '100%', overflow: 'hide' }}>
+      <div className="CalendarPage" style={{ width: '100%', overflow: 'auto' }}>
         <FullCalendar
           ref={calendarRef}
           plugins={[interactionPlugin, dayGridPlugin, timeGridPlugin, bootstrap5Plugin, rrulePlugin]}
@@ -189,7 +176,8 @@ export default function Calendar() {
           events={events}
           eventClick={handleEventSelect}
           initialDate={virtualDate.toISOString()} // Imposta la data iniziale del calendario
-          now={virtualDate.toISOString()}
+          // now={virtualDate.toISOString()}
+          scrollTime="00:00:00"
           headerToolbar={{
             left: 'prev,next,today',
             center: 'title',
@@ -212,6 +200,7 @@ export default function Calendar() {
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
           onConfirm={handleDeleteModalResponse} // Passa la risposta
+          onUpdate={handleEventUpdate} 
           event={eventToDelete}
         />
         <style>

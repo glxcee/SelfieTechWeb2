@@ -56,10 +56,15 @@ const eventSchema = new mongoose.Schema({
     description: String,
     start: { type: String, required: true },
     end: { type: String, required: true },
+    allDay: { type: Boolean, default: false },
     user: { type: String, required: true },
+
     periodic: { type: Boolean, default: false },
     repeatDays: [Number],  // es: [1, 3, 5]
-    repeatUntil: String    // es: "2025-08-31"
+    repeatUntil: String,    // es: "2025-08-31"
+
+    scadenza: { type: Boolean, default: false }, // Se è una scadenza
+    completed: { type: Boolean, default: false }, // Se è completato
 });
 
 const VirtualDateSchema = new mongoose.Schema({

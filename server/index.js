@@ -12,7 +12,7 @@ const User = db.User
 const app = express()
 app.use(cors({
   origin: 'http://localhost:3000', // Consenti richieste solo da questo dominio
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Metodi consentiti
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], // Metodi consentiti
   credentials: true // Se stai usando cookie o autenticazione con credenziali
 }));
 
@@ -181,6 +181,7 @@ const eventController = require("./api/event");
 app.post('/api/event', ensureAuthenticated, eventController.saveEvent);
 app.get('/api/event', ensureAuthenticated, eventController.getEvents);
 app.delete('/api/event/:id', ensureAuthenticated, eventController.deleteEvent);
+app.patch('/api/event/:id/completed', ensureAuthenticated, eventController.updateEventCompleted);
 
 // Virtual Date
 const vDate = require("./api/vDate");
