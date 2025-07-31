@@ -9,7 +9,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, onTo
     const [endDate, setEndDate] = useState('');
     const [endTime, setEndTime] = useState('');
 
-    const [earlyTime, setEarlyTime] = useState(0);
+    const [earlyTime, setEarlyTime] = useState(5);
     const [repeatEvery, setRepeatEvery] = useState(0);
     const [untilSnooze, setUntilSnooze] = useState(false);
     const [earlyTimeUnit, setEarlyTimeUnit] = useState('minuti');

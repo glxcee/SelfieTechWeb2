@@ -14,20 +14,20 @@ export default function DeleteModal({ isOpen, onClose, onConfirm, event }) {
                 <h1 className="event-t">{event.title}</h1>
                 <h2 className="event-d">{event.description}</h2>
                 <div className="event-dt"> 
-                    <p className="event-start"> Da: {event.start.toLocaleString([], { 
+                    <p className="event-start"> Da: {event?.start?.toLocaleString([], { 
                             year: 'numeric',
                             month: '2-digit',
                             day: '2-digit',
                             hour: '2-digit',
                             minute: '2-digit',
-                     })}</p>
-                    <p className="event-end"> A: {event.end.toLocaleString([], { 
+                     }) || "error"}</p>
+                    <p className="event-end"> A: {event.end?.toLocaleString([], { 
                             year: 'numeric',
                             month: '2-digit',
                             day: '2-digit',
                             hour: '2-digit',
                             minute: '2-digit',
-                     })}</p>
+                     }) || "error"}</p>
                 </div>
                 <div className="modal-actions">
                     <button 

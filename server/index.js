@@ -136,6 +136,7 @@ app.post("/api/register", async (req, res, next) => {
 
       await (new db.Profile({username})).save()
       await (new db.Book({username})).save()
+      await (new db.VirtualDate({username})).save()
   
       return auth(req, res, next)
 
@@ -182,11 +183,19 @@ app.post('/api/event', ensureAuthenticated, eventController.saveEvent);
 app.get('/api/event', ensureAuthenticated, eventController.getEvents);
 app.delete('/api/event/:id', ensureAuthenticated, eventController.deleteEvent);
 
+
+const notify = require("./api/notification");
+
+app.get('/api/notification', ensureAuthenticated, notify.get);
+
+
+
 // Virtual Date
 const vDate = require("./api/vDate");
 
 app.post('/api/virtualDate', ensureAuthenticated, vDate.postVirtualDate);
 app.get('/api/virtualDate', ensureAuthenticated, vDate.getVirtualDate);
+
 
 
 
@@ -198,6 +207,12 @@ app.get('*',ensureAuthenticated, function (req, res) {
 })
 
 app.listen(8000, () => {
+  setTimeout(() => {
+    notify.check()
+    setInterval(notify.check, 60000)
+  }, 3000)
+    
+
     console.log("Server online http://localhost:8000")
 })
 

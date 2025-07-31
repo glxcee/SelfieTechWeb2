@@ -2,14 +2,14 @@ const db = require('./mongo')
 const Book = db.Book
 
 async function getBook(req, res) {
-    console.log("entering books")
+    //console.log("entering books")
     const user = db.env!=="DEV" ? req.user : await db.User.findOne({username:"a"})
     console.log(user)
     if(user) {
         try {
 
             const book = await Book.findOne({username: user.username})
-            console.log(book)
+            //console.log(book)
             return res.status(200).json(book)//send("Profile updated")
         }
         catch(err) {

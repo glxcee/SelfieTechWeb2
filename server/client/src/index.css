@@ -21,7 +21,8 @@ code {
   margin-bottom: 24px;
 }
 
-#markdown-p {
-  /*max-width: calc(100% - 10rem);*/
-}
 
+.custom-scroll {
+  scrollbar-width: thin;            /* Firefox */
+  scrollbar-color: #94a3b8 transparent; /* thumb + track per Firefox */
+}
