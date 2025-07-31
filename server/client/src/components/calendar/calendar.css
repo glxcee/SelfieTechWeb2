@@ -8,3 +8,30 @@
 .body {
     background-color: gray;
 }
+
+.fc-header-toolbar > div.fc-toolbar-chunk:first-child {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-width: 200px; /* o quanto vuoi */
+}
+
+/* Forza il quarto bottone su nuova riga */
+.fc-header-toolbar > div.fc-toolbar-chunk:first-child > button:nth-child(2) {
+  flex-basis: 45%;  /* Occupa tutta la riga */
+}
+
+/* Forza il quarto bottone su nuova riga */
+.fc-header-toolbar > div.fc-toolbar-chunk:first-child > button:nth-child(3) {
+  flex-basis: 39%;  /* Occupa tutta la riga */
+  order: 1;          /* Assicura che venga dopo i primi 3 */
+  margin-left: 0;
+}
+
+/* Il quinto bottone rimane sulla stessa riga del quarto */
+.fc-header-toolbar > div.fc-toolbar-chunk:first-child > button:nth-child(4) {
+  flex-basis: 45%;  /* Larghezza naturale */
+  order: 2;          /* Sta subito dopo il 4 */
+  margin-left: 11px;  /* Distanza dal quarto bottone */
+}

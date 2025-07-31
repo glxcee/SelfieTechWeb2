@@ -182,6 +182,7 @@ app.post('/api/event', ensureAuthenticated, eventController.saveEvent);
 app.get('/api/event', ensureAuthenticated, eventController.getEvents);
 app.delete('/api/event/:id', ensureAuthenticated, eventController.deleteEvent);
 app.patch('/api/event/:id/completed', ensureAuthenticated, eventController.updateEventCompleted);
+app.get('/api/events/uncompleted', ensureAuthenticated, eventController.getUncompleted);
 
 // Virtual Date
 const vDate = require("./api/vDate");

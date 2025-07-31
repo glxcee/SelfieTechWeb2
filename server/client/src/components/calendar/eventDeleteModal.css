@@ -54,3 +54,66 @@
     padding: 10%;
     margin-top: 15%;
 }
+
+
+
+.pmodal {
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    background-color: rgb(255, 255, 255);
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    padding: 10px;
+    max-height: 60vh;
+    overflow: hidden;
+}
+
+.event-t {
+    font-size: x-large;
+    text-align: center;
+    font-weight: 500;
+    position: sticky;
+    top: 0;
+    background-color: white;
+    z-index: 1;
+    padding-bottom: 8px;
+    margin-bottom: 5px;
+}
+
+.uncompleted-scroll {
+    overflow-y: auto;
+    max-height: 300px; /* puoi regolare in base alle tue preferenze */
+    width: 100%;
+}
+
+.uncompleted-list {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    margin-top: 15px;
+}
+
+.uncompleted-item {
+    padding: 8px 0;
+    border-bottom: 1px solid black;
+}
+
+.event-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.event-checkbox {
+  margin-left: 10px;
+  transform: scale(1.2);
+}
+
+.event-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}

@@ -154,4 +154,23 @@ async function updateEventCompleted(req, res) {
     }
 }
 
-module.exports = { saveEvent, getEvents, deleteEvent, updateEventCompleted };
+// Recupera tutti gli eventi con scadenza = true e completed = false
+async function getUncompleted(req, res) {
+  try {
+    const user = db.env !== "DEV" ? req.user : await db.User.findOne({ username: "a" });
+
+    const events = await Event.find({
+      user: user.username,
+      scadenza: true,
+      completed: false,
+    });
+
+    res.json(events);
+  } catch (err) {
+    console.error("Errore nel recupero eventi non completati:", err);
+    res.status(500).json({ message: "Errore del server" });
+  }
+}
+
+
+module.exports = { saveEvent, getEvents, deleteEvent, updateEventCompleted, getUncompleted };

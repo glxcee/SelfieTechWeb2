@@ -6,23 +6,22 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import './calendar.css';
 import EventModal from './eventModal.js';
 import EventDeleteModal from './eventDeleteModal.js';
+import UncompletedModal from './uncompletedModal';
 import { address } from '../../utils.js';
 import { useTimeMachine } from '../timeMachine/timeMachineContext.js';
 import bootstrap5Plugin from '@fullcalendar/bootstrap5';
 import rrulePlugin from '@fullcalendar/rrule';
-import { render } from '@fullcalendar/core/preact.js';
 
 export default function Calendar() {
   const calendarRef = useRef(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 600);
   const [events, setEvents] = useState([]);
-  const [calendarKey, setCalendarKey] = useState(0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInfo, setSelectedInfo] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isUncompletedModalOpen, setIsUncompletedModalOpen] = useState(false);
 
   const [eventToDelete, setEventToDelete] = useState(null);
 
@@ -57,7 +56,7 @@ export default function Calendar() {
       console.error('Errore:', error);
     }
   }
-
+  
   function handleDateSelect(selectInfo) {
     let endDateObj = new Date(selectInfo.endStr);
     endDateObj.setDate(endDateObj.getDate() - 1); // Aggiusto la data
@@ -159,8 +158,7 @@ export default function Calendar() {
           : ev
       )
     );
-    let calendarApi = calendarRef.current.getApi();
-    calendarApi.refetchEvents()
+    fetchEventsFromDB(); // Ricarica gli eventi dal DB
   }
 
   return (
@@ -172,14 +170,45 @@ export default function Calendar() {
           themeSystem="bootstrap5"
           initialView="dayGridMonth"
           selectable={true}
+          firstDay={1}
           select={handleDateSelect}
           events={events}
           eventClick={handleEventSelect}
           initialDate={virtualDate.toISOString()} // Imposta la data iniziale del calendario
           // now={virtualDate.toISOString()}
+          initialNow={virtualDate.toISOString()}
+          // datesSet={handleDatesSet}
           scrollTime="00:00:00"
+
+          buttonText={{
+            today: 'Oggi',
+            month: 'Mese',
+            week: 'Settimana',
+            day: 'Giorno',
+            prev: '←',
+            next: '→',
+          }}
+
+          customButtons={{
+            expand: {
+              text: '⛶',
+              click: () => {
+                if (calendarRef.current) {
+                  const calendarApi = calendarRef.current.getApi();
+                  calendarApi.gotoDate(virtualDate);
+                }
+              }
+            },
+            sList: {
+              text: '☰',
+              click: () => {
+                setIsUncompletedModalOpen(true);
+              }
+            }
+          }}
+
           headerToolbar={{
-            left: 'prev,next,today',
+            left: 'prev,next today expand sList',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay',
           }}
@@ -202,6 +231,13 @@ export default function Calendar() {
           onConfirm={handleDeleteModalResponse} // Passa la risposta
           onUpdate={handleEventUpdate} 
           event={eventToDelete}
+        />
+        <UncompletedModal
+          isOpen={isUncompletedModalOpen}
+          onClose={() => {
+            setIsUncompletedModalOpen(false);
+            fetchEventsFromDB(); // <-- aggiorna gli eventi dal DB
+          }}
         />
         <style>
           {`

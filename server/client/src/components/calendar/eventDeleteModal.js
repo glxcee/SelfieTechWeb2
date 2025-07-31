@@ -3,7 +3,7 @@ import './eventDeleteModal.css';
 import { address } from '../../utils.js';
 
 export default function DeleteModal({ isOpen, onClose, onConfirm, onUpdate, event }) {
-const [completed, setCompleted] = useState(false);
+    const [completed, setCompleted] = useState(false);
     const [initialCompleted, setInitialCompleted] = useState(false);
 
     useEffect(() => {
@@ -17,10 +17,6 @@ const [completed, setCompleted] = useState(false);
     if (!isOpen || !event) return null;
 
     console.log("Evento in DeleteModal:", event);
-
-    function handleCheckboxChange(e) {
-        setCompleted(e.target.checked);
-    }
 
     const isAllDay = event.allDay === true; // Potrebbe essere undefined se non presente
     const dateFormat = isAllDay
@@ -58,7 +54,7 @@ const [completed, setCompleted] = useState(false);
                     // Aspetto la risposta JSON con l'evento aggiornato completo
                     const updatedEventFromServer = await response.json();
 
-                    onUpdate(updatedEventFromServer);  // Passa evento aggiornato completo al padrone
+                    onUpdate(updatedEventFromServer);  // Passa evento aggiornato completo 
                 } catch (error) {
                     console.error(error);
                 }
@@ -80,17 +76,24 @@ const [completed, setCompleted] = useState(false);
                 </div>
                 
                 {event.scadenza && (
-                    <div className="flex items-center gap-2 mt-4 mb-2">
-                        <input
-                            type="checkbox"
-                            id="complete-checkbox"
-                            checked={completed}
-                            onChange={handleCheckboxChange}
-                        />
-                        <label htmlFor="complete-checkbox" className="text-base">
-                            Segna come completata
-                        </label>
-                    </div>
+                <div className="flex items-center gap-2 mt-4 mb-2">
+                    <button
+                        type="button"
+                        onClick={() => setCompleted(!completed)}
+                        style={{
+                        backgroundColor: completed ? '#2563EB' : '#FFFFFF', // blu o bianco
+                        color: completed ? '#FFFFFF' : '#000000',          // bianco o nero
+                        border: '1px solid #2563EB',
+                        borderRadius: '4px',
+                        padding: '6px 12px',
+                        cursor: 'pointer',
+                        fontWeight: '500',
+                        userSelect: 'none',
+                        }}
+                    >
+                        Completa
+                    </button>
+                </div>
                 )}
 
                 <div className="modal-actions">
