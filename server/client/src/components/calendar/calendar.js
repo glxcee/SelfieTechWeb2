@@ -25,7 +25,22 @@ export default function Calendar() {
 
   const [eventToDelete, setEventToDelete] = useState(null);
 
-  const { virtualDate } = useTimeMachine();
+  const { virtualDate, manualVirtualDate } = useTimeMachine();
+
+  useEffect(() => {
+    if (manualVirtualDate && calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      calendarApi.gotoDate(manualVirtualDate);
+      calendarApi.setOption('now', manualVirtualDate.toISOString().substring(0, 10));
+      const currentView = calendarApi.view.type;
+      if (currentView === 'dayGridMonth') {
+        calendarApi.changeView('timeGridDay');
+      } else {
+        calendarApi.changeView('dayGridMonth');
+      }
+      calendarApi.changeView(currentView);
+    }
+  }, [manualVirtualDate]);
 
   useEffect(() => {
     fetchEventsFromDB();
@@ -79,6 +94,7 @@ export default function Calendar() {
         recurrenceEndDate: eventData.periodic ? eventData.recurrenceEndDate : null,
         notifyConfig: eventData.notifyConfig, 
         scadenza: eventData.scadenza || false,
+        location: eventData.location || null,
     };
 
     let calendarApi = selectedInfo.view.calendar;
@@ -120,6 +136,7 @@ export default function Calendar() {
       description: clickInfo.event.extendedProps.description,
       scadenza: clickInfo.event.extendedProps.scadenza,
       completed: clickInfo.event.extendedProps.completed,
+      location: clickInfo.event.extendedProps.location || null,
     }); // Salva l'evento da eliminare
     setIsDeleteModalOpen(true); // Mostra il modale di conferma
   }
@@ -175,7 +192,7 @@ export default function Calendar() {
           events={events}
           eventClick={handleEventSelect}
           initialDate={virtualDate.toISOString()} // Imposta la data iniziale del calendario
-          // now={virtualDate.toISOString()}
+          now={virtualDate.toISOString().substring(0, 10)}
           initialNow={virtualDate.toISOString()}
           // datesSet={handleDatesSet}
           scrollTime="00:00:00"
@@ -238,6 +255,7 @@ export default function Calendar() {
             setIsUncompletedModalOpen(false);
             fetchEventsFromDB(); // <-- aggiorna gli eventi dal DB
           }}
+          virtualDate={virtualDate}
         />
         <style>
           {`

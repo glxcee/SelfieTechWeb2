@@ -65,6 +65,12 @@ const eventSchema = new mongoose.Schema({
 
     scadenza: { type: Boolean, default: false }, // Se è una scadenza
     completed: { type: Boolean, default: false }, // Se è completato
+
+    location: {
+      lat: { type: Number },
+      lng: { type: Number },
+      name: { type: String }, // opzionale, tipo "Bologna, Piazza Maggiore"
+    }
 });
 
 const VirtualDateSchema = new mongoose.Schema({

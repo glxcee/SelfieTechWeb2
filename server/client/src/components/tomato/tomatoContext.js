@@ -24,11 +24,11 @@ export const TomatoProvider = ({ children }) => {
   const [overDuration, setOverDuration] = useState(0); // extra tempo nell'ultimo ciclo
 
   // Numero di cicli e ciclo corrente
-  const [cycles, setCycles] = useState(2);
+  const [cycles, setCycles] = useState(5);
   const [currentCycle, setCurrentCycle] = useState(1);
 
   // Durata totale dell'intero Pomodoro (es. 70 minuti)
-  const [totalMinutes, setTotalMinutes] = useState(70);
+  const [totalMinutes, setTotalMinutes] = useState(175);
 
   // ID della sessione salvata nel backend
   const [tomatoId, setTomatoId] = useState(null);

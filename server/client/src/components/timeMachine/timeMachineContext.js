@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import Calendar from '../calendar/calendar.js'
 import { address } from '../../utils.js'; // URL del backend
 
 const TimeMachineContext = createContext();
@@ -9,6 +10,9 @@ export const TimeMachineProvider = ({ children }) => {
     const stored = localStorage.getItem('virtualDate');
     return stored ? new Date(stored) : null;
   });
+
+  const [manualVirtualDate, setManualVirtualDate] = useState(null);
+
   const intervalRef = useRef(null);
 
   // Inizializzazione asincrona di virtualDate da backend
@@ -64,6 +68,7 @@ export const TimeMachineProvider = ({ children }) => {
   const resetVirtualDate = async () => {
     const now = new Date();
     setVirtualDate(now);
+    setManualVirtualDate(now);
     localStorage.setItem('virtualDate', now.toISOString());
 
     try {
@@ -81,14 +86,15 @@ export const TimeMachineProvider = ({ children }) => {
     } catch (err) {
       console.error("Errore fetch virtual date:", err);
     }
-
-    window.location.reload(); // ricarica pagina
+    //window.location.reload(); // ricarica pagina
   };
 
   const changeVirtualDate = async (newDateWithoutSeconds) => {
     const current = new Date(virtualDate); // copia per sicurezza
     newDateWithoutSeconds.setSeconds(current.getSeconds(), current.getMilliseconds());
+
     setVirtualDate(newDateWithoutSeconds);
+    setManualVirtualDate(newDateWithoutSeconds);
 
     localStorage.setItem('virtualDate', newDateWithoutSeconds.toISOString());
 
@@ -108,12 +114,12 @@ export const TimeMachineProvider = ({ children }) => {
       console.error("Errore fetch virtual date:", err);
     }
 
-    window.location.reload(); // ricarica pagina
+    //window.location.reload(); // ricarica pagina
   };
 
   return (
     <TimeMachineContext.Provider
-      value={{ virtualDate, resetVirtualDate, changeVirtualDate }}
+      value={{ virtualDate, manualVirtualDate, resetVirtualDate, changeVirtualDate }}
     >
       {children}
     </TimeMachineContext.Provider>

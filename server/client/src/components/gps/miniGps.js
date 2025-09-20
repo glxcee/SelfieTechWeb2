@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import React, { useState } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Marker
+// Fix icone default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: require('leaflet/dist/images/marker-icon-2x.png'),
@@ -11,57 +11,73 @@ L.Icon.Default.mergeOptions({
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
 
-export default function MiniGpsPage() {
-  const [position, setPosition] = useState(null); // State for the marker position
-  const [status, setStatus] = useState(''); // State to hold the status message
+// Funzione per ottenere l'indirizzo tramite OpenStreetMap
+async function getAddress(lat, lng) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+    const data = await res.json();
+    return data.display_name;
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
 
+// Hook per click sulla mappa
+function MapClickHandler({ onSelect }) {
+  useMapEvents({
+    click: async (e) => {
+      const address = await getAddress(e.latlng.lat, e.latlng.lng);
+      if (onSelect) {
+        onSelect({ lat: e.latlng.lat, lng: e.latlng.lng, address: address || 'Posizione sconosciuta' });
+      }
+    },
+  });
+  return null;
+}
+
+export default function MiniGpsPage({ onSelect }) {
+  const [position, setPosition] = useState(null);
+
+  // Pulsante opzionale per geolocalizzazione
   const geoFindMe = () => {
-    setStatus('Locating…'); // Set initial status
-
-    const success = (location) => {
-      const { latitude, longitude } = location.coords;
-      setPosition([latitude, longitude]); // Set position for the marker
-      setStatus(''); // Clear status
-    };
-
-    const error = () => {
-      setStatus('Unable to retrieve your location'); // Update status on error
-    };
-
     if (!navigator.geolocation) {
-      setStatus('Geolocation is not supported by your browser'); 
-    } else {
-      navigator.geolocation.getCurrentPosition(success, error); 
+      alert('Geolocation non supportata dal browser');
+      return;
     }
+
+    navigator.geolocation.getCurrentPosition(async (location) => {
+      const { latitude, longitude } = location.coords;
+      const address = await getAddress(latitude, longitude);
+      const loc = { lat: latitude, lng: longitude, address: address || 'Posizione sconosciuta' };
+      setPosition([latitude, longitude]);
+      if (onSelect) onSelect(loc);
+    }, () => {
+      alert('Impossibile ottenere la posizione');
+    });
   };
 
-  // Apertura automatica della mappa
-  useEffect(() => {
-    geoFindMe();
-  }, []);
-
   return (
-    <div>
-      <p id="status">{status}</p>
+    <div className="flex flex-col" style={{padding: '10px'}}>
+      <button onClick={geoFindMe} className="mb-2 px-2 py-1 bg-blue-500 text-white rounded w-auto">
+        Usa la mia posizione
+      </button>
 
-      {position && (
-        <MapContainer 
-          center={position} 
-          zoom={13} 
-          className="relative p-4 overflow-hidden text-gray-700 bg-white shadow-lg rounded-xl w-60 md:w-72 dark:bg-gray-800 dark:text-gray-100"
-          style={{ height: "300px"}}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          />
-          <Marker position={position}>
-            <Popup>
-              Your current location!
-            </Popup>
-          </Marker>
-        </MapContainer>
-      )}
+      <MapContainer
+        center={position || [41.9028, 12.4964]} // Roma di default
+        zoom={13}
+        style={{ height: '300px', width: '100%' }}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; OpenStreetMap contributors'
+        />
+        {position && <Marker position={position} />}
+        <MapClickHandler onSelect={(loc) => {
+          setPosition([loc.lat, loc.lng]);
+          if (onSelect) onSelect(loc);
+        }} />
+      </MapContainer>
     </div>
   );
 }

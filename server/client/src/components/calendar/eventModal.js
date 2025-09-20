@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import MiniGpsPage from '../gps/miniGps.js';
 import './eventModal.css';
 
 export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*onTomatoClick*/}) {
@@ -23,13 +24,15 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
 
     // Per le scadenze 
     const [isScadenza, setIsScadenza] = useState(false);
-    const [scadenzaDate, setScadenzaDate] = useState('');
-    const [scadenzaTime, setScadenzaTime] = useState('08:00');
 
     // Per i tomato
     const [isTomato, setIsTomato] = useState(false);
     const [date, setDate] = useState('');
     const [duration, setDuration] = useState(75); // default Pomodoro 75 min
+
+    // Per la location
+    const [location, setLocation] = useState(null); 
+    const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
     useEffect(() => {
         if (selectedInfo) {
@@ -43,6 +46,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
             setIsTomato(false);
             setDate('');
             setDuration(75);
+            setLocation(null);
             // Selezione inizio e fine manuali con orari specifici
             const startDate = selectedInfo.startStr ? new Date(selectedInfo.startStr) : new Date();
             const start = new Date(startDate);
@@ -53,7 +57,6 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
             end.setHours(10, 0, 0, 0); // 10:00
             
             setStartDate(start.toISOString().split('T')[0]);
-            setScadenzaDate(start.toISOString().split('T')[0]);
             setDate(start.toISOString().split('T')[0]);
             setStartTime(start.toTimeString().slice(0, 5));
             setEndDate(end.toISOString().split('T')[0]);
@@ -117,6 +120,18 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
         return times;
     }
 
+    // Gestione delle 4 combinazioni
+    let endValue;
+    if (isScadenza && !allDay) {
+        endValue = `${startDate}T${startTime}`;
+    } else if (isScadenza && allDay) {
+        endValue = startDate;
+    } else if (!isScadenza && !allDay) {
+        endValue = `${endDate}T${endTime}`;
+    } else if (!isScadenza && allDay) {
+        endValue = endDate;
+    }
+
     function handleSubmit() {
         if (!title || !startDate || !startTime || !endDate || !endTime) {
             return alert('Compila tutti i campi obbligatori');
@@ -134,7 +149,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
             title,
             description,
             start: !allDay ? `${startDate}T${startTime}` : `${startDate}`,
-            end: !allDay ? `${endDate}T${endTime}` : `${endDate}`,
+            end: endValue,
             allDay: allDay,
             notifyConfig: {
                 earlyTime: earlyTime * multiplier1,
@@ -145,6 +160,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
             recurrenceDays,
             recurrenceEndDate: isPeriodic ? recurrenceEndDate : null,
             scadenza: isScadenza,
+            location: location || null,
         });
     
         onClose();
@@ -354,8 +370,8 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
                                 <input
                                     type="date"
                                     className="border px-3 py-2 rounded shadow text-lg"
-                                    value={scadenzaDate}
-                                    onChange={(e) => setScadenzaDate(e.target.value)}
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
                                 />
                                 </>
                             )}
@@ -435,8 +451,8 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
                         <input
                         type="date"
                         className="border px-3 py-2 rounded shadow text-lg"
-                        value={scadenzaDate}
-                        onChange={(e) => setScadenzaDate(e.target.value)}
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
                         />
 
                         {/* Input orario, visibile solo se allDay è true */}
@@ -444,8 +460,8 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
                         <input
                             type="time"
                             className="mt-2 border px-3 py-2 rounded shadow text-xl"
-                            value={scadenzaTime}
-                            onChange={(e) => setScadenzaTime(e.target.value)}
+                            value={startTime}
+                            onChange={(e) => setStartTime(e.target.value)}
                         />
                         )}
                     </div>
@@ -486,6 +502,24 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
                             />
                         </div>
                     )}
+
+                    <div className="flex flex-col items-center mt-4">
+                        <button
+                            type="button"
+                            onClick={() => setIsLocationModalOpen(true)}
+                            className="px-4 py-2 bg-green-500 text-white rounded shadow hover:bg-green-600"
+                        >
+                            {location ? "Modifica posizione 📍" : "Aggiungi posizione 📍"}
+                        </button>
+                        {location && (
+                            <p className="text-sm mt-2 text-gray-700">
+                            Selezionato: {location.address} <br />
+                            <span className="text-xs text-gray-500">
+                                ({location.lat}, {location.lng})
+                            </span>
+                            </p>
+                        )}
+                    </div>
 
                     <div className="flex flex-col items-center justify-center pt-4 gap-1">
                         <h1 className='text-lg font-bold'>Config delle notifiche</h1>
@@ -528,6 +562,29 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
 
                 </div>
             </div>
+            {isLocationModalOpen && (
+            <div className="modal-overlay" style={{ zIndex: 100000}}>
+                <div 
+                className="modal-content" 
+                style={{ height: '470px', width: '90%', maxWidth: '600px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between'}}
+                >
+                    <div style={{ flex: 1, margin: '10px 0' }}>
+                        <MiniGpsPage
+                        onSelect={async (loc) => {
+                            setLocation({ ...loc});
+                            setIsLocationModalOpen(false);
+                        }}
+                        />
+                    </div>
+
+                    <div className="modal-actions flex justify-end gap-2 mt-2" >
+                        <button onClick={() => setIsLocationModalOpen(false)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 mb-5">
+                        Chiudi
+                        </button>
+                    </div>
+                </div>
+            </div>
+            )}
         </div>
     );
 }

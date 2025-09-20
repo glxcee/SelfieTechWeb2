@@ -19,7 +19,7 @@ async function setNotifications(event, config) {
 async function saveEvent(req, res) {
     try {
         console.log("Richiesta ricevuta per salvare un evento:", req.body);
-        const { title, description, start, end, allDay, periodic, recurrenceDays, recurrenceEndDate, notifyConfig, scadenza } = req.body;
+        const { title, description, start, end, allDay, periodic, recurrenceDays, recurrenceEndDate, notifyConfig, scadenza, location } = req.body;
         const user = db.env !== "DEV" ? req.user : await db.User.findOne({ username: "a" });
 
         const newEvent = new Event({
@@ -38,6 +38,7 @@ async function saveEvent(req, res) {
             }).filter(d => d !== null) : [],
             repeatUntil: periodic ? recurrenceEndDate || null : null,
             scadenza: scadenza === true || scadenza === 'true',
+            location: location || null,
         });
 
         await newEvent.save();
@@ -84,6 +85,7 @@ async function getEvents(req, res) {
         color: color,
         scadenza: event.scadenza,
         completed: event.completed,
+        location: event.location || null
       };
 
       if (event.periodic) {
