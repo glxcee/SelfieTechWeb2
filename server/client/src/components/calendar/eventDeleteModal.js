@@ -3,18 +3,22 @@ import './eventDeleteModal.css';
 import { address } from '../../utils.js';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useTomato } from "../tomato/tomatoContext";
+import { useTimeMachine } from '../timeMachine/timeMachineContext.js';
 
 export default function DeleteModal({ isOpen, onClose, onConfirm, onUpdate, event }) {
     const [completed, setCompleted] = useState(false);
     const [initialCompleted, setInitialCompleted] = useState(false);
     const [showMap, setShowMap] = useState(false);
 
+    const { handleStartStop } = useTomato();
+    const { virtualDate } = useTimeMachine();
+
     useEffect(() => {
         if (event) {
             const initial = event.completed ?? false;
             setCompleted(initial);
             setInitialCompleted(initial);
-            
         }
     }, [event?.id]);
 
@@ -52,6 +56,45 @@ export default function DeleteModal({ isOpen, onClose, onConfirm, onUpdate, even
         }
         setShowMap(false);
         onConfirm(isConfirmed);
+        onClose();
+    }
+
+    // --- controllo Avvia ---
+    const isTomato = event.title === "🍅";
+
+    const canStart = (() => {
+        if (!event.start || !virtualDate) return false;
+        const start = new Date(event.start);
+        const diffMinutes = (start - virtualDate) / 60000;
+        return diffMinutes <= 10 && diffMinutes >= -1;
+    })();
+
+    async function handleStartTomato() {
+        // Avvia tomato
+        const newTomato = {
+            title: event.title,
+            duration: event.extendedProps?.duration || 25,
+            start: virtualDate || new Date(),
+            relatedEventId: event.id,
+        };
+        handleStartStop(newTomato);
+
+        // Aggiorna evento come completed
+        try {
+            const response = await fetch(`${address}api/event/${event.id}/completed`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ completed: true }),
+            });
+            if (!response.ok) throw new Error("Errore nel completamento evento");
+            const updatedEventFromServer = await response.json();
+            onUpdate(updatedEventFromServer);
+            setCompleted(true);
+        } catch (error) {
+            console.error(error);
+        }
+
         onClose();
     }
 
@@ -112,6 +155,25 @@ export default function DeleteModal({ isOpen, onClose, onConfirm, onUpdate, even
                                     </Marker>
                                 </MapContainer>
                             </div>
+                        )}
+                    </div>
+                )}
+
+                {isTomato && (
+                    <div className='mt-3 w-full flex flex-col'>
+                        <button 
+                            type="button"
+                            onClick={handleStartTomato}
+                            disabled={!canStart || completed}
+                            className={`view-location-btn ${canStart ? '' : 'disabled'}`}
+                        >
+                            Avvia
+                        </button>
+                        {(!canStart && !completed) && (
+                            <p className="text-xs text-gray-500 mt-1">Disponibile negli ultimi 10 minuti</p>
+                        )}
+                        {completed && (
+                            <p className="text-xs text-gray-500 mt-1">Evento già completato</p>
                         )}
                     </div>
                 )}

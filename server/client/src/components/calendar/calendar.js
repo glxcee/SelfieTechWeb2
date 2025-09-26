@@ -207,15 +207,6 @@ export default function Calendar() {
           }}
 
           customButtons={{
-            expand: {
-              text: '⛶',
-              click: () => {
-                if (calendarRef.current) {
-                  const calendarApi = calendarRef.current.getApi();
-                  calendarApi.gotoDate(virtualDate);
-                }
-              }
-            },
             sList: {
               text: '☰',
               click: () => {
@@ -225,7 +216,7 @@ export default function Calendar() {
           }}
 
           headerToolbar={{
-            left: 'prev,next today expand sList',
+            left: 'prev,next today sList',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay',
           }}
