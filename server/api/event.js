@@ -1,19 +1,9 @@
 const db = require('./mongo');
 const Event = db.Event;
 
-async function setNotifications(event, config) { 
-    const n1 = new db.Notification({
-            name: event.title + " reminder!",
-            description: event.title + " scheduled for " + event.start,
-            user: event.user,
-            type: event.title === "Tomato" ? "tomato" : "event", // Tipo di notifica
-            event: event._id, // Riferimento all'evento appena creato
-            date: (new Date(event.start) - config.earlyTime), // Calcola la data della notifica,
-            repeat: config.repeatEvery, // Se repeatEvery è maggiore di 0, la notifica è ripetitiva
-         })
+const notify = require('./notification'); // Assicurati di avere un modulo per le notifiche
 
-    await n1.save()
-}
+
 
 // Salva un nuovo evento nel database
 async function saveEvent(req, res) {
@@ -39,11 +29,12 @@ async function saveEvent(req, res) {
             repeatUntil: periodic ? recurrenceEndDate || null : null,
             scadenza: scadenza === true || scadenza === 'true',
             location: location || null,
+            repeatEvery: notifyConfig.repeatEvery || 0, // Numero di ripetizioni della notifica
         });
 
         await newEvent.save();
 
-        setNotifications(newEvent, notifyConfig);
+        notify.set(newEvent, notifyConfig);
 
         console.log("Evento salvato con successo:", newEvent);
         res.status(201).json({ message: "Evento salvato con successo", event: newEvent });

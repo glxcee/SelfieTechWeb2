@@ -70,7 +70,9 @@ const eventSchema = new mongoose.Schema({
       lat: { type: Number },
       lng: { type: Number },
       name: { type: String }, // opzionale, tipo "Bologna, Piazza Maggiore"
-    }
+    },
+    snoozedAt: { type: Date, default: null }, // Data in cui l'evento è stato posticipato
+    repeatEvery: { type: Number, default: 0 } // Numero di ripetizioni della notifica
 });
 
 const VirtualDateSchema = new mongoose.Schema({
@@ -86,7 +88,9 @@ const notificationSchema = new mongoose.Schema({
     raed: { type: Boolean, default: false }, // Indica se la notifica è stata letta
     user: { type: String, required: true }, // Associazione con l'utente
     type: { type: String, required: true }, // Tipo di notifica (es. "event", "tomato", etc.)
-    event: { type: mongoose.Schema.Types.ObjectId, ref: "Event" }, // Riferimento all'evento associato
+    event: { type: mongoose.Schema.Types.ObjectId, ref: "Event" }, // Riferimento all'evento associato,
+    firstNotification: { type: Date, default: Date.now() }, // Data della prima notifica,
+    snoozable: { type: Boolean, default: false }, // Indica se la notifica è snoozable
 })
 
 dev1 = 1 // 1: dev, 0: prod
