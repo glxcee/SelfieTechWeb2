@@ -180,6 +180,7 @@ app.get('/api/tomato/last-live', ensureAuthenticated, tomato.getLiveTomato);
 const eventController = require("./api/event");
 
 app.post('/api/event', ensureAuthenticated, eventController.saveEvent);
+app.post('/api/event/snooze/:id', ensureAuthenticated, eventController.snoozeEvent);
 app.get('/api/event', ensureAuthenticated, eventController.getEvents);
 app.delete('/api/event/:id', ensureAuthenticated, eventController.deleteEvent);
 

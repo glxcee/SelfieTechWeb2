@@ -20,7 +20,7 @@ export default function Header(props) {
 
         let eventsSeen = []
         for (let i = 0; i < data.length; i++) {
-          if(!eventsSeen.includes(data.event) ) {
+          if(!eventsSeen.includes(data[i].event) ) {
             data[i].latest = true
             eventsSeen.push(data[i].event)
           }
@@ -36,12 +36,26 @@ export default function Header(props) {
     }, 1000);
 
     fetchNotifications()
-    const notificationInterval = setInterval(fetchNotifications, 60000)
+    let notificationInterval = null
+
+    const rn = new Date(virtualDate)
+    
+    const double0 = new Date(rn.getTime() + 60000)
+    
+    const waitTime = double0.setSeconds(0,0) - rn.getTime()
+    console.log("Real Date!!!: ", rn, "Double 0: ", double0, "Wait Time: ", waitTime)
+    // ogni minuto ma a 00
+    setTimeout(() => {
+      fetchNotifications()
+      notificationInterval = setInterval(fetchNotifications, 60000)
+    },waitTime)
+    
     
 
     return () => {
       clearInterval(interval);
-      clearInterval(notificationInterval);
+      if(notificationInterval) 
+        clearInterval(notificationInterval);
     } 
 
 
@@ -84,6 +98,23 @@ export default function Header(props) {
     else if (value <= unit * 2) return "chill";
     else if (value <= unit * 3) return "warning";
     else return "close";
+  }
+
+  function snoozeNotification(eventId) {
+    fetch(`${address}api/event/snooze/${eventId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("Notification snoozed:", data);
+      fetchNotifications(); // Ricarica le notifiche dopo lo snooze
+    })
+    .catch(error => {
+      console.error("Error snoozing notification:", error);
+    });
   }
 
   return (
@@ -206,18 +237,18 @@ export default function Header(props) {
               const range = new Date(eventDate) - new Date(notification.firstNotification)
               const value = new Date(notification.date) - new Date(notification.firstNotification)
 
-              console.log("Range: ", range, "First Notification: ", notification.firstNotification, "Event Date: ", eventDate, "Color: ", calcColor(range, value))
+              //console.log("Range: ", range, "First Notification: ", notification.firstNotification, "Event Date: ", eventDate, "Color: ", calcColor(range, value))
 
               return (
               <div key={index} className='p-3'>
                   <div className='flex gap-2 items-center'>
                     <h3 className="font-semibold">{notification.name}</h3>
-                    <h7 className={`w-3 h-3 rounded-3xl  ${notificationColor[calcColor(range, value)]}`}> </h7>
+                    <span className={`w-3 h-3 rounded-3xl  ${notificationColor[calcColor(range, value)]}`}> </span>
                   </div>
                   <p className="text-xs pt-1">{notification.description}</p>
                   <span className="text-xs text-gray-400">{new Date(notification.date).toLocaleString()}</span>
                   {
-                    notification.latest ? <button className='text-sm py-1 px-2 mx-2 hover:bg-gray-800 hover:text-white transition-all duration-300'>Snooze</button> : ""
+                    notification.latest && notification.snoozable ? <button onClick={() => snoozeNotification(notification._id)} className='text-sm py-1 px-2 mx-2 hover:bg-gray-800 hover:text-white transition-all duration-300'>Snooze</button> : ""
                   }
                   
                 </div>

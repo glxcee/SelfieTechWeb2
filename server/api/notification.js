@@ -21,11 +21,14 @@ async function setNotifications(event, config) {
 
 async function notificationList(user) {
     
-    const timeMachine = await db.VirtualDate.findOne({ username: user.username });
+    let timeMachine = await db.VirtualDate.findOne({ username: user.username });
     //console.log("USERNAME: ", user.username, "\nTIME MACHINE: ", timeMachine);
+    if(!timeMachine) {
+        return []
+    }
     const correctTime = (new Date(timeMachine.vDate)).getTime() + (Date.now() - (new Date(timeMachine.rDate)).getTime());
 
-    console.log("Correct time for notifications:", correctTime, "\nvDate:", timeMachine.vDate, "\nrDate:", timeMachine.rDate);
+    //console.log("Correct time for notifications:", correctTime, "\nvDate:", timeMachine.vDate, "\nrDate:", timeMachine.rDate);
 
     const notifications = await db.Notification.find({
         user: user.username,
@@ -54,14 +57,16 @@ async function checkNotifications() {
         const users = await db.User.find({})
         for(const user of users) {
 
-            console.log(user)
 
             const notifications = await notificationList(user)
-            console.log(user.username + " notifications: ", notifications)
+            //console.log(user.username + " notifications: ", notifications)
 
-            if(notifications.length === 0) continue
+            
 
             const timeMachine = await db.VirtualDate.findOne({ username: user.username });
+
+            //console.log("Time machine for user:", user.username, "is", timeMachine);
+            if(notifications.length === 0 || !timeMachine) continue
             
             const timeElapsed = Date.now() - (new Date(timeMachine.rDate)).getTime()
             const correctTime = (new Date(new Date(timeMachine.vDate).getTime() + timeElapsed)).setSeconds(0, 0);
@@ -74,11 +79,12 @@ async function checkNotifications() {
                 
                 const event = await db.Event.findById(notifications[0].event);
                 const eventDate = new Date(event.start).setSeconds(0, 0);
-                
-                if(notificationTime.getTime() < eventDate.getTime()) {
-                    let newDate = correctTime + new Date(event.repeatEvery)
 
-                    if(eventDate.getTime() <= newDate.getTime()) {
+                
+                if(notificationTime < eventDate) {
+                    let newDate = correctTime + event.repeatEvery
+
+                    if(eventDate <= newDate || event.snoozedAt !== null) {
                         console.log("Event is in the future");
                             
                         newDate = eventDate
