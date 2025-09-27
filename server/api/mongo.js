@@ -93,7 +93,7 @@ const notificationSchema = new mongoose.Schema({
     snoozable: { type: Boolean, default: false }, // Indica se la notifica è snoozable
 })
 
-dev1 = 1 // 1: dev, 0: prod
+dev1 = 0 // 1: dev, 0: prod
 module.exports = {
     env: dev1 ? "DEV" : "PROD",
     User: mongoose.model("User", userSchema),
