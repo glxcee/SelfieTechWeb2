@@ -34,12 +34,48 @@ async function saveEvent(req, res) {
 
         await newEvent.save();
 
-        notify.set(newEvent, notifyConfig);
+        if(!newEvent.periodic)
+            notify.set(newEvent, notifyConfig);
 
         console.log("Evento salvato con successo:", newEvent);
         res.status(201).json({ message: "Evento salvato con successo", event: newEvent });
     } catch (err) {
         console.error("Errore nel salvataggio dell'evento:", err);
+        res.status(500).json({ message: "Errore del server", error: err.message });
+    }
+}
+
+async function snoozeEvent(req, res) {
+    try {
+        const notificationId = req.params.id;
+        const user = db.env !== "DEV" ? req.user : await db.User.findOne({ username: "a" });
+
+        const notification = await db.Notification.findByIdAndUpdate(notificationId, { $set: { snoozable: false } });
+        const event = await Event.findById(notification.event)
+        const notifications = await db.Notification.find({ event: notification.event, user: user.username }).sort({ date: -1 });
+
+        if(notifications[0]._id !== notificationId) {
+            console.log("Notifica futura già messa in coda")
+            await db.Notification.updateOne({ _id: notification[0] }, { $set: { date: event.start, snoozable: false } });
+        }
+
+
+        console.log("Posticipando l'evento per l'utente:", user.username);
+        res.status(200).json({ message: "Evento posticipato con successo" });
+
+        /*
+        let timeMachine = await db.VirtualDate.findOne({ username: user.username });
+            //console.log("USERNAME: ", user.username, "\nTIME MACHINE: ", timeMachine);
+        if(!timeMachine) {
+            return res.status(404).json({ message: "Time machine not found" });
+        }
+        const correctTime = (new Date(timeMachine.vDate)).getTime() + (Date.now() - (new Date(timeMachine.rDate)).getTime());
+            */
+
+        await Event.updateOne({ _id: notification.event }, { $set: { snoozedAt: new Date() } } );
+        
+    } catch(err) {
+        console.error("Errore nel posticipare l'evento:", err);
         res.status(500).json({ message: "Errore del server", error: err.message });
     }
 }
@@ -166,4 +202,4 @@ async function getUncompleted(req, res) {
 }
 
 
-module.exports = { saveEvent, getEvents, deleteEvent, updateEventCompleted, getUncompleted };
+module.exports = { saveEvent, getEvents, deleteEvent, snoozeEvent, updateEventCompleted, getUncompleted };

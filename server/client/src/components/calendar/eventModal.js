@@ -521,6 +521,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
                         )}
                     </div>
 
+                    { isPeriodic ? "" : 
                     <div className="flex flex-col items-center justify-center pt-4 gap-1">
                         <h1 className='text-lg font-bold'>Config delle notifiche</h1>
                         <span className='text-sm'>Avviso prima dell'evento</span>
@@ -554,7 +555,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
                             <span className='pt-1'>Stop when snooze</span>
                         </div>
                     </div>
-
+                    }
                     <div className="modal-actions">
                         <button onClick={isTomato ? handleTomatoSubmit : handleSubmit}>Salva</button>
                         <button onClick={onClose}>Annulla</button>
