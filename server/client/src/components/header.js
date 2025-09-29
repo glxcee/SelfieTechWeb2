@@ -119,9 +119,9 @@ export default function Header(props) {
 
   return (
     <header>
-      <nav className="bg-white shadow py-4 fixed top-0 left-0 w-full z-50">
+      <nav className="bg-white shadow py-4 w-full">
         <div className="px-2 mx-auto max-w-7xl">
-          <div className="flex items-center justify-between px-8 mx-auto max-w-7xl">
+          <div className="flex flex-col md:flex-row items-center justify-between px-8 gap-1 mx-auto flex-wrap">
             <div className=" flex items-center mr-4">
               <Link className="flex-shrink-0" to="/selfie">
               <button
@@ -229,7 +229,7 @@ export default function Header(props) {
         </div>
       </nav>
       { showNotifications ?
-      <div className='fixed top-32 sm:top-28 md:top-20 right-20 w-68 max-w-68 z-50 h-60 overflow-y-auto custom-scroll bg-gray-100 shadow-lg rounded-lg border divide-y'>
+      <div className='absolute top-64 right-10 sm:top-28 md:top-20 md:right-48 w-68 max-w-68 z-50 h-60 overflow-y-auto custom-scroll bg-gray-100 shadow-lg rounded-lg border divide-y'>
           {
             notifications.map((notification, index) => {
               const desc = notification.description.split(" ")

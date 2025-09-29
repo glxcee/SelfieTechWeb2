@@ -90,7 +90,7 @@ async function checkNotifications() {
                         newDate = eventDate
                     }
 
-                    const newNotification = new db.Notification({
+                        const newNotification = new db.Notification({ 
                             name: notifications[0].name,
                             description: notifications[0].description,
                             date: newDate,
@@ -98,16 +98,16 @@ async function checkNotifications() {
                             type: notifications[0].type,
                             event: notifications[0].event,
                             firstNotification: notifications[0].firstNotification,
-                            snoozable: notifications[0].snoozable
-                    });
-
-                    newNotification.save()
-                        .then(() => {
-                            console.log("New notification saved for user:", user.username);
-                        })
-                        .catch(err => {
-                            console.error("Error saving new notification:", err);
+                            snoozable: notifications[0].snoozable 
                         });
+                        newNotification.save()
+                            .then(() => {
+                                console.log("New notification saved for user:", user.username);
+                            })
+                            .catch(err => {
+                                console.error("Error saving new notification:", err);
+                            });
+                    
                     }
                     
                 }

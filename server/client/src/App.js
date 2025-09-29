@@ -15,7 +15,7 @@ import { address } from "./utils"
 function HomeContainer(props) {
   return (<div>
     <Header user={props.user}/>
-    <div className="pt-48 sm:pt-24">
+    <div className="pt-1">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/profile" element={<ProfilePage user={props.user} />} />

@@ -148,7 +148,7 @@ export default function EventModal({ isOpen, onClose, onSave, selectedInfo, /*on
         onSave({
             title,
             description,
-            start: !allDay ? `${startDate}T${startTime}` : `${startDate}`,
+            start: !allDay ? `${startDate}T${startTime}` : `${startDate}T00:00`,
             end: endValue,
             allDay: allDay,
             notifyConfig: {
